@@ -45,7 +45,7 @@ Pipeline inputs:
 - T1
 - EPI
 - MNI Template
-- Tissue Priors
+- Population Priors
 
 All inputs and outputs are NIfTI files unless otherwise specified.
 
@@ -53,6 +53,7 @@ All inputs and outputs are NIfTI files unless otherwise specified.
 
 In:
 - Raw T1
+- Population Priors
 
 Out: 
 - Deobliqued, RPI reoriented, bias-corrected, skull-stripped T1
