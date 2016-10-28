@@ -30,3 +30,7 @@ respective step and brainstorm possible checks to ensure the step works and
 is appropriate for the data?
 
 Articles about resting-state preprocessing and analysis:
+
+```
+this is code
+```
