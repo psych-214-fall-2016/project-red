@@ -51,6 +51,10 @@ All inputs and outputs are NIfTI files unless otherwise specified.
 
 ### Anatomical Preprocessing
 
+Software:
+- ANTs (Brain Extraction)
+- AFNI
+
 In:
 - Raw T1
 - Population Priors
@@ -61,6 +65,10 @@ Out:
 - Brain mask.
 
 ### Functional Preprocessing
+
+Software:
+- fslmaths
+- ??
 
 In: 
 - Raw EPI
@@ -73,6 +81,9 @@ Out:
 
 ### Segmentation
 
+Software:
+- ANTs Atropos
+
 In:
 - Deobliqued, RPI reoriented, skull-stripped T1 (output of anatomical preprocessing)
 
@@ -80,6 +91,9 @@ Out:
 - 3 class tissue probability maps (WM, GM, CSF)
 
 ### Anatomical Registration
+
+Software:
+- ANTs
 
 In:
 - Deobliqued, RPI reoriented, bias-corrected, whole-head T1
@@ -90,6 +104,9 @@ Out:
 - T1 --> MNI transform
 
 ### Functional Registration
+
+Software:
+- ANTs
 
 In: 
 - Mean EPI image
