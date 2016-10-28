@@ -86,11 +86,15 @@ In:
 
 Out:
 - T1 in MNI space
-- Transforms for anatomical --> MNI
+- T1 --> MNI transform
 
 ### Functional Registration
 
 In: 
 - Mean EPI image
 - Depbliqued, RPI reoriented, slice-time and motion corrected EPI.
-- Anatomical --> MNI transform
+- T1 --> MNI transform
+
+Out:
+- Mean EPI in MNI space
+- EPI in MNI space
