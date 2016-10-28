@@ -38,3 +38,59 @@ Articles about resting-state preprocessing and analysis:
 - Functional Preproc (Jacob)
 - Anatomical Preproc (Chris)
 - Nuisance (TBD; Jacob + Christine?)
+
+## Pipeline Overview
+
+Pipeline inputs:
+- T1
+- EPI
+- MNI Template
+- Tissue Priors
+
+All inputs and outputs are NIfTI files unless otherwise specified.
+
+### Anatomical Preprocessing
+
+In:
+- Raw T1
+
+Out: 
+- Deobliqued, RPI reoriented, bias-corrected, skull-stripped T1
+- Deobliqued, RPI reoriented, bias-corrected, whole-head T1
+- Brain mask.
+
+### Functional Preprocessing
+
+In: 
+- Raw EPI
+
+Out:
+- Depbliqued, RPI reoriented, slice-time and motion corrected EPI.
+- Rigid-body motion parameters.
+- Mean EPI image.
+- EPI mask.
+
+### Segmentation
+
+In:
+- Deobliqued, RPI reoriented, skull-stripped T1 (output of anatomical preprocessing)
+
+Out:
+- 3 class tissue probability maps (WM, GM, CSF)
+
+### Anatomical Registration
+
+In:
+- Deobliqued, RPI reoriented, bias-corrected, whole-head T1
+- MNI template
+
+Out:
+- T1 in MNI space
+- Transforms for anatomical --> MNI
+
+### Functional Registration
+
+In: 
+- Mean EPI image
+- Depbliqued, RPI reoriented, slice-time and motion corrected EPI.
+- Anatomical --> MNI transform
