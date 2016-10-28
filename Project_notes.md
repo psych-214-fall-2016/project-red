@@ -28,9 +28,13 @@ patient and control groups in the study.
 - Split up steps of preprocessing among different group members to research each
 respective step and brainstorm possible checks to ensure the step works and
 is appropriate for the data?
+- [Workflow example from CPAC](http://fcp-indi.github.io/docs/user/running.html)
 
 Articles about resting-state preprocessing and analysis:
 
-```
-this is code
-```
+## Breaking up the work
+- Registration (Michael and Zuzana)
+- Segmentation (Christine)
+- Functional Preproc (Jacob)
+- Anatomical Preproc (Chris)
+- Nuisance (TBD; Jacob + Christine?)
