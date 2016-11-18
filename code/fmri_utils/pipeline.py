@@ -1,5 +1,5 @@
 """
-skeleton.py:
+pipeline.py:
 outline for preprocessing project
 --> use as temp organizaiton tool, don't have to keep
 includes functions for each module (corect input and output vars types,
