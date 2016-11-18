@@ -12,7 +12,7 @@ import scipy.ndimage as snd
 from scipy.optimize import fmin_powell
 
 # import translation functions to be tested
-from fmri_utils.translations import optimize_trans_vol
+from fmri_utils.func_preproc.translations import optimize_trans_vol
 
 
 
