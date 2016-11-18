@@ -6,7 +6,7 @@ Run with:
 """
 
 import numpy as np
-import pipeline
+from fmri_utils import anatomical_preprocess, functional_preprocess, segmentation, anatomical_reg, functional_reg
 
 def fake_T1_raw(I,J,K):
     T1_raw = np.ones((I,J,K))
@@ -31,7 +31,7 @@ def test_anatomical_preprocess():
     pop_priors = fake_pop_priors(I,J,K)
 
     #get func outputs
-    T1_skull, T1_whole, T1_mask = pipeline.anatomical_preprocess(T1_raw, pop_priors)
+    T1_skull, T1_whole, T1_mask = anatomical_preprocess(T1_raw, pop_priors)
 
     #check shape of outputs
     assert(T1_skull.shape==(I,J,K))
@@ -44,7 +44,7 @@ def test_functional_preprocess():
     EPI_raw = fake_EPI_raw(I,J,K,T)
 
     #get func outputs
-    EPI_cor, motion_params, EPI_mean, EPI_mask = pipeline.functional_preprocess(EPI_raw)
+    EPI_cor, motion_params, EPI_mean, EPI_mask = functional_preprocess(EPI_raw)
 
     #check shape of outputs
     assert(EPI_cor.shape==(I,J,K,T))
@@ -57,10 +57,10 @@ def test_segmentation():
     [I,J,K,T] = [4,5,6,7]
     T1_raw = fake_T1_raw(I,J,K)
     pop_priors = fake_pop_priors(I,J,K)
-    T1_skull, T1_whole, T1_mask = pipeline.anatomical_preprocess(T1_raw, pop_priors)
+    T1_skull, T1_whole, T1_mask = anatomical_preprocess(T1_raw, pop_priors)
 
     #get func outputs
-    T1_WMprob, T1_GMprob, T1_CSFprob = pipeline.segmentation(T1_skull)
+    T1_WMprob, T1_GMprob, T1_CSFprob = segmentation(T1_skull)
 
     #check shape of outputs
     assert(T1_WMprob.shape==(I,J,K))
@@ -73,10 +73,10 @@ def test_anatomical_reg():
     T1_raw = fake_T1_raw(I,J,K)
     pop_priors = fake_pop_priors(I,J,K)
     MNI = fake_MNI(I,J,K)
-    T1_skull, T1_whole, T1_mask = pipeline.anatomical_preprocess(T1_raw, pop_priors)
+    T1_skull, T1_whole, T1_mask = anatomical_preprocess(T1_raw, pop_priors)
 
     #get func outputs
-    T1_in_MNI, T1_x2_MNI = pipeline.anatomical_reg(T1_whole, MNI)
+    T1_in_MNI, T1_x2_MNI = anatomical_reg(T1_whole, MNI)
 
     #check shape of outputs
     assert(T1_in_MNI.shape==(I,J,K))
@@ -89,12 +89,12 @@ def test_functional_reg():
     EPI_raw = fake_EPI_raw(I,J,K,T)
     pop_priors = fake_pop_priors(I,J,K)
     MNI = fake_MNI(I,J,K)
-    T1_skull, T1_whole, T1_mask = pipeline.anatomical_preprocess(T1_raw, pop_priors)
-    EPI_cor, motion_params, EPI_mean, EPI_mask = pipeline.functional_preprocess(EPI_raw)
-    T1_in_MNI, T1_x2_MNI = pipeline.anatomical_reg(T1_whole, MNI)
+    T1_skull, T1_whole, T1_mask = anatomical_preprocess(T1_raw, pop_priors)
+    EPI_cor, motion_params, EPI_mean, EPI_mask = functional_preprocess(EPI_raw)
+    T1_in_MNI, T1_x2_MNI = anatomical_reg(T1_whole, MNI)
 
     #get func outputs
-    EPI_corrected_in_MNI, EPI_mean_in_MNI, EPI_x2_MNI = pipeline.functional_reg(EPI_cor, EPI_mean, T1_x2_MNI)
+    EPI_corrected_in_MNI, EPI_mean_in_MNI, EPI_x2_MNI = functional_reg(EPI_cor, EPI_mean, T1_x2_MNI)
 
     #check shape of outputs
     assert(EPI_corrected_in_MNI.shape==(I,J,K,T))
