@@ -6,7 +6,7 @@ Run with:
 """
 
 import numpy as np
-from fmri_utils import anatomical_preprocess, functional_preprocess, segmentation, anatomical_reg, functional_reg
+from fmri_utils.pipeline import anatomical_preprocess, functional_preprocess, segmentation, anatomical_reg, functional_reg
 
 def fake_T1_raw(I,J,K):
     T1_raw = np.ones((I,J,K))
