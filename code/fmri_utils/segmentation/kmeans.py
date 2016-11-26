@@ -21,9 +21,9 @@ def get_centers(x, labels, k):
         centers[i] = x_cluster.mean()
     return centers
 
-def kmeans(x, k=4, max_iter=10^4):
-    centers = np.random.rand(k)
-    old_centers = None
+def kmeans(x, k=4, max_iter=10^4, scale=50):
+    centers = np.random.rand(k) * scale
+    old_centers = np.zeros(k)
     iteration = 0
 
     while should_go(centers, old_centers, iteration, max_iter):

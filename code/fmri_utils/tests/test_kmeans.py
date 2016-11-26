@@ -1,10 +1,10 @@
-""" py.test test for pipeline.py
+""" py.test test for kmeans.py
 Run with:
-    py.test test_pipeline.py
+    py.test test_kmeans.py
 """
 
 import numpy as np
-from fmri_utils.segmentation.kmeans import *
+from fmri_utils.segmentation import kmeans
 from numpy.testing import assert_almost_equal
 
 def test_should_go():
