@@ -4,8 +4,7 @@ Run with:
 """
 
 import numpy as np
-from fmri_utils.segmentation import kmeans
-from numpy.testing import assert_almost_equal
+from fmri_utils.segmentation.kmeans import *
 
 def test_should_go():
     centers = [1, 2, 3, 4]
@@ -32,5 +31,6 @@ def test_get_centers():
 
 def test_kmeans():
     x = np.concatenate((np.ones(10)*10, np.ones(10)*20))
-    centers, _ = kmeans(x, k=2)
-    assert_almost_equal(centers, [10, 20])
+    centers, _ = kmeans(x, k=2, scale=20)
+    assert(len(centers) == 2)
+    assert(sorted(centers) == [10, 20])
