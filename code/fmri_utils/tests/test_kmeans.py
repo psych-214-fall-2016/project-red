@@ -30,7 +30,7 @@ def test_get_centers():
     assert(np.allclose(centers, [10, 20]))
 
 def test_kmeans():
-    x = np.concatenate((np.ones(10)*10, np.ones(10)*20))
-    centers, _ = kmeans(x, k=2, scale=20)
+    x = np.concatenate((np.ones(10)*10, np.ones(10)*50))
+    centers, _ = kmeans(x, k=2, scale=100)
     assert(len(centers) == 2)
     assert(sorted(centers) == [10, 20])
