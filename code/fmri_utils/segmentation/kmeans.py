@@ -19,6 +19,7 @@ def get_centers(x, labels, k):
     for i in range(k):
         x_cluster = x[labels == i]
         centers[i] = x_cluster.mean()
+    centers[np.isnan(centers)] = 0 # avoid nans
     return centers
 
 def kmeans(x, k=4, max_iter=10^4, scale=50):
