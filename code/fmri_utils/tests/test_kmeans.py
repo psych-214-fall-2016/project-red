@@ -33,4 +33,4 @@ def test_kmeans():
     x = np.concatenate((np.ones(10)*10, np.ones(10)*50))
     centers, _ = kmeans(x, k=2, scale=100)
     assert(len(centers) == 2)
-    assert(sorted(centers) == [10, 20])
+    assert(sorted(centers) == [10, 50])
