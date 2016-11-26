@@ -1,6 +1,8 @@
 # organizational file for registration module plan
 
 """
+NOTE: skull-stripped vs whole-head; different for func->anat vs anat->template? keep this in mind, good for comparisons later
+
 from the dipy tutorial:
 
 0. resample moving into static space; show overlay slices
