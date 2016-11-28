@@ -5,13 +5,13 @@ from glob import glob
 
 import setuptools
 
-from distutils.core import setup
+from distutils.core import setup, Extension
 
 setup(name='fmri_utils',
       description='Functions for psych-214 class project',
-      packages=['fmri_utils', 'fmri_utils.func_preproc'],
+      packages=['fmri_utils', 'fmri_utils.func_preproc', 'fmri_utils.registration'],
       license='BSD license',
       package_data = {'fmri_utils': [pjoin('tests', '*')]},
       # Add all the scripts in the scripts directory
-      scripts = glob(pjoin('scripts', '*')),
+      scripts = glob(pjoin('scripts', '*'))
       )
