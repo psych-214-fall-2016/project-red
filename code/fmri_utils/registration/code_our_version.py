@@ -71,15 +71,9 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
 
     Returns
     -------
-    moving_in_stat : array shape (I, J, K)
-        array with 3D from moving image file, resampled in static image space;
-        has same affine as static image!
+    updated_moving_affine : array shape (4, 4)
+        new affine for moving image to ref
 
-    new_affine : array shape (4, 4)
-        affine for new moving image (in static space) to ref
-
-    shift : array shape (4, 4)
-        affine for changes in ref space
     """
 
     static_mat, static_vec = nib.affines.to_matvec(static_affine)
@@ -96,6 +90,4 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
     shift = nib.affines.from_matvec(np.eye(3), diff_cmass_in_ref)
     updated_moving_affine = shift.dot(moving_affine)
 
-    moving_in_stat, new_affine = resample(static_data, moving_data, static_affine, updated_moving_affine)
-
-    return moving_in_stat, new_affine, shift
+    return updated_moving_affine

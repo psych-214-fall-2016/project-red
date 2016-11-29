@@ -9,6 +9,7 @@ from os.path import dirname, join as pjoin
 
 import nibabel as nib
 import numpy as np
+import numpy.linalg as npl
 from scipy.ndimage import affine_transform
 
 from fmri_utils.registration.shared import get_data_affine
@@ -64,8 +65,11 @@ def test_transform_cmass():
     original_shift = nib.affines.from_matvec(np.eye(3), [1,2,3])
     mat, vec = nib.affines.to_matvec(original_shift)
     FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+    FAKE_moved_affine = np.eye(4)
 
-    FAKE_fix, FAKE_fix_affine, ref_shift = transform_cmass(FAKE, FAKE_moved, FAKE_affine, FAKE_affine)
+    updated_FAKE_moved_affine = transform_cmass(FAKE, FAKE_moved, FAKE_affine, FAKE_moved_affine)
+
+    FAKE_fix, FAKE_fix_affine = resample(FAKE, FAKE_moved, FAKE_affine, updated_FAKE_moved_affine)
 
     assert(np.array_equal(FAKE_fix, FAKE))
-    assert(np.array_equal(ref_shift, original_shift))
+    assert(np.array_equal(npl.inv(FAKE_moved_affine).dot(updated_FAKE_moved_affine), original_shift))
