@@ -25,7 +25,7 @@ our plan:
 #### FUNCTIONS TO WRITE
 ## shared.py
 
-#load data into python; define `static` and `moving` [Zuzanna]
+#load data into python; define `static` and `moving` [Zuzanna-- DONE]
 
 
 ## code_from_dipy.py [Michael]
@@ -41,7 +41,7 @@ our plan:
 
 ## code_our_version.py [Zuzanna]
 
-#resample (our version); from static and moving, produce new affine
+#resample (our version); from static and moving, produce new affine [new affine = static affine] [DONE]
 
 #center of mass transform (our version); from static and moving, produce com affine
 
