@@ -15,8 +15,8 @@ np.set_printoptions(precision=4, suppress=True)
 """ Common definitions for the following functions:
 
     vol0: the volume to which the next volume is being transformed to
-    - volume 0 of the series
-    - is a volume which is presumed to be the
+    - starts at the volume 0 of the series
+    - if not the start, is a volume which has already been translated for xyz motion
 
     vol1: the volume being transformed to match vol1
     - starts at the volume 1 of the series
@@ -56,7 +56,7 @@ def xyz_trans_vol(vol, x_y_z_trans):
     return trans_vol
 
 # Cost function using xyz translations and the first volume with the given volume
-def cost_at_xyz(x_y_z_trans, vol0, vol1):
+def cost_at_xyz(vol0, vol1, x_y_z_trans):
     """ Give cost function value at xyz translation values `x_y_z_trans`
     """
     # Translate vol1 x,y,z and return the mismatch function value for the given
@@ -77,7 +77,6 @@ def optimize_trans_vol(vol0, vol1):
             vol1 and vol0
         optimized_vol1: vol1 translated by the best parameters to match vol0
     """
-    #global vol0, vol1
-    best_params = fmin_powell(cost_at_xyz, [0, 0, 0], args = (vol0, vol1,))
+    best_params = fmin_powell(cost_at_xyz, [0, 0, 0], callback=my_callback)
     optimized_vol1 = snd.affine_transform(vol1, [1, 1, 1], -best_params)
     return optimized_vol1, best_params
