@@ -21,25 +21,21 @@ ANAT_FILENAME = 'ds114_sub009_highres.nii'
 
 def test_resample():
     #check resample works, using fake data
-    small = np.zeros((5,5,5))
-    small[3,3,3] = 1
-    small_affine = nib.affines.from_matvec(np.eye(3)*3, np.zeros(3))
+    n = 5
+    ORIG = np.zeros((n,n,n))
+    ORIG[3,3,3] = 100
+    ORIG_affine = np.eye(4)
 
-    large = np.zeros((15,15,15))
-    large[9:11, 9:11] = 1
-    large_affine = np.eye(4)
+    zoom = 3
+    BIG_affine = nib.affines.from_matvec(np.eye(3)/zoom, np.zeros(3))
+    mat, vec = nib.affines.to_matvec(BIG_affine)
+    BIG = affine_transform(ORIG, mat, vec, output_shape=(n*zoom, n*zoom, n*zoom), order = 1)
 
-    large_in_small, new_affine = resample(small, large, small_affine, large_affine)
-    assert(np.array_equal(large_in_small.shape, small.shape))
-    ##not same values, look at this!
-    #assert(np.array_equal(large_in_small, small))
+    BIG_in_orig, new_affine = resample(ORIG, BIG, ORIG_affine, BIG_affine)
+    assert(np.array_equal(BIG_in_orig.shape, ORIG.shape))
+    assert(np.array_equal(BIG_in_orig, ORIG))
 
-    small_in_large, new_affine = resample(large, small, large_affine, small_affine)
-    assert(np.array_equal(small_in_large.shape, large.shape))
-    ##not same values, look at this!
-    #assert(np.array_equal(small_in_large, large))
-
-
+    """
     #check subj anat resampled to template space
     template_path = pjoin(MY_DIR, TEMPLATE_FILENAME)
     anat_path = pjoin(MY_DIR, ANAT_FILENAME)
@@ -55,6 +51,8 @@ def test_resample():
     #check that template esampled to template space is the same
     moving_new, moving_new_affine = resample(static_data, static_data, static_affine, static_affine)
     assert(np.array_equal(moving_new, static_data))
+    """
+
 
 def test_transform_cmass():
     #check center of mass transform works, using fake data
@@ -73,3 +71,6 @@ def test_transform_cmass():
 
     assert(np.array_equal(FAKE_fix, FAKE))
     assert(np.array_equal(npl.inv(FAKE_moved_affine).dot(updated_FAKE_moved_affine), original_shift))
+    """
+    add test with real brain images
+    """

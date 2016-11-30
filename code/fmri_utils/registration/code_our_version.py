@@ -20,16 +20,16 @@ def resample(static_data, moving_data, static_affine, moving_affine):
     Parameters
     ----------
     static_data : array shape (I, J, K)
-        array with 3D data from static image file
+        array with 3D data from static image
 
      moving_data : array shape (I, J, K)
-        array with 3D data from moving image file
+        array with 3D data from moving image
 
     static_affine : array shape (4, 4)
-        affine for static image file
+        affine for static image
 
     moving_affine : array shape (4, 4)
-        affine for static image file
+        affine for moving image
 
     Returns
     -------
@@ -44,30 +44,29 @@ def resample(static_data, moving_data, static_affine, moving_affine):
     moving2static = npl.inv(moving_affine).dot(static_affine)
     mat, vec = nib.affines.to_matvec(moving2static)
 
-    moving_in_stat = affine_transform(moving_data, mat, vec,
-                                         output_shape=static_data.shape, order=1)
+    moving_in_stat = affine_transform(moving_data, mat, vec, output_shape=static_data.shape, order=1)
 
     new_affine = static_affine
     return moving_in_stat, new_affine
 
 
 def transform_cmass(static_data, moving_data, static_affine, moving_affine):
-    """ resample moving image in static image space
-        --> matches center of mass of moving iamge to static image
+    """ get moving image affine, to use when resampling moving in static space
+        --> matches center of mass of moving image to static image (in ref space)
 
     Parameters
     ----------
     static_data : array shape (I, J, K)
-        array with 3D data from static image file
+        array with 3D data from static image
 
-     moving_data : array shape (I, J, K)
-        array with 3D data from moving image file
+    moving_data : array shape (I, J, K)
+        array with 3D data from moving image
 
     static_affine : array shape (4, 4)
-        affine for static image file
+        affine for static image
 
     moving_affine : array shape (4, 4)
-        affine for static image file
+        starting affine for mvoing image
 
     Returns
     -------

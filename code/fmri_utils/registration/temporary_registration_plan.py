@@ -43,9 +43,9 @@ our plan:
 
 #resample (our version); from static and moving, produce new affine [new affine = static affine] [DONE]
 
-#center of mass transform (our version); from static and moving, produce com affine
+#center of mass transform (our version); from static and moving, produce com affine [DONE]
 
-#rigid transform (our version); from static and moving and com affine, produce rigid affine
+#rigid transform (our version); from static and moving and com affine, produce rigid affine 
 
 #affine transform (our version); from static and moving and rigid affine, produce final affine
 
