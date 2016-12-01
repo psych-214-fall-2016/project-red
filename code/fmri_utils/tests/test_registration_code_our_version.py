@@ -13,7 +13,9 @@ import numpy.linalg as npl
 from scipy.ndimage import affine_transform
 
 from fmri_utils.registration.shared import get_data_affine
-from fmri_utils.registration.code_our_version import resample, transform_cmass
+from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid
+from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
+
 
 MY_DIR = dirname(__file__)
 TEMPLATE_FILENAME = 'mni_icbm152_t1_tal_nlin_asym_09a.nii'
@@ -31,7 +33,7 @@ def test_resample():
     mat, vec = nib.affines.to_matvec(BIG_affine)
     BIG = affine_transform(ORIG, mat, vec, output_shape=(n*zoom, n*zoom, n*zoom), order = 1)
 
-    BIG_in_orig, new_affine = resample(ORIG, BIG, ORIG_affine, BIG_affine)
+    BIG_in_orig = resample(ORIG, BIG, ORIG_affine, BIG_affine)
     assert(np.array_equal(BIG_in_orig.shape, ORIG.shape))
     assert(np.array_equal(BIG_in_orig, ORIG))
 
@@ -43,13 +45,13 @@ def test_resample():
     static_data, static_affine = get_data_affine(template_path)
     moving_data, moving_affine = get_data_affine(anat_path)
 
-    moving_new, moving_new_affine = resample(static_data, moving_data, static_affine, moving_affine)
+    moving_new = resample(static_data, moving_data, static_affine, moving_affine)
 
     assert(np.array_equal(moving_new.shape, static_data.shape))
     assert(np.array_equal(moving_new_affine, static_affine))
 
     #check that template esampled to template space is the same
-    moving_new, moving_new_affine = resample(static_data, static_data, static_affine, static_affine)
+    moving_new= resample(static_data, static_data, static_affine, static_affine)
     assert(np.array_equal(moving_new, static_data))
     """
 
@@ -67,10 +69,48 @@ def test_transform_cmass():
 
     updated_FAKE_moved_affine = transform_cmass(FAKE, FAKE_moved, FAKE_affine, FAKE_moved_affine)
 
-    FAKE_fix, FAKE_fix_affine = resample(FAKE, FAKE_moved, FAKE_affine, updated_FAKE_moved_affine)
+    FAKE_fix = resample(FAKE, FAKE_moved, FAKE_affine, updated_FAKE_moved_affine)
 
     assert(np.array_equal(FAKE_fix, FAKE))
     assert(np.array_equal(npl.inv(FAKE_moved_affine).dot(updated_FAKE_moved_affine), original_shift))
+    """
+    add test with real brain images
+    """
+
+
+def test_transform_rigid():
+    #check center of mass transform works, using fake data
+    FAKE = np.zeros((30,30,30))
+    FAKE[10:20,10:20,10:20] = np.random.rand(10,10,10)
+    FAKE_affine = np.eye(4)
+
+    #check translation only
+    original_shift = nib.affines.from_matvec(np.diagflat([1,1,1]), [2,2,1])
+    mat, vec = nib.affines.to_matvec(original_shift)
+    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+
+    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 1)
+    assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
+
+    #check rotation only
+    rot_mat = z_rotmat(0.3).dot(y_rotmat(0.1)).dot(x_rotmat(0.1))
+    original_shift = nib.affines.from_matvec(rot_mat, [0,0,0])
+    mat, vec = nib.affines.to_matvec(original_shift)
+    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+
+    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 2)
+    assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
+
+    #check translation & rotation --- doesn't work!!!
+    rot_mat = z_rotmat(0.3).dot(y_rotmat(0.1)).dot(x_rotmat(0.1))
+    original_shift = nib.affines.from_matvec(rot_mat, [2,2,1])
+    mat, vec = nib.affines.to_matvec(original_shift)
+    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+
+    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 2)
+    #assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
+
+
     """
     add test with real brain images
     """

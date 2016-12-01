@@ -1,7 +1,5 @@
 """
-code_our_version.py:
-
-- resample: produce resampled image so same dims as another image
+code_our_version.py
 
 """
 
@@ -37,8 +35,6 @@ def resample(static_data, moving_data, static_affine, moving_affine):
     moving_in_stat : array shape (I, J, K)
         array with 3D from moving image resampled in static image space
 
-    new_affine : array shape (4, 4)
-        affine for new moving image (in static space) to ref
 
     """
 
@@ -47,8 +43,7 @@ def resample(static_data, moving_data, static_affine, moving_affine):
 
     moving_in_stat = affine_transform(moving_data, mat, vec, output_shape=static_data.shape, order=1)
 
-    new_affine = static_affine
-    return moving_in_stat, new_affine
+    return moving_in_stat
 
 
 def transform_cmass(static_data, moving_data, static_affine, moving_affine):
@@ -93,7 +88,7 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
     return updated_moving_affine
 
 
-def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter):
+def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter, partial=0):
     """ get moving image affine, to use when resampling moving in static space
         --> does rigid (3 trans, 3 rot) alignment, max "iter" iterations
 
@@ -114,6 +109,11 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
     iter : int
         max number iterations in optimization
 
+    partial : int, flag
+        0 = find best tranlation, then find best rotations
+        1 = find best translation only
+        2 = find best rotation only
+
     Returns
     -------
     updated_moving_affine : array shape (4, 4)
@@ -121,29 +121,66 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
 
     """
 
-    def MI_cost_rotation(rotations):
-        #get MI for rotated moving_data
-        moving_rotated = apply_rotation(moving_data, rotations)
-        return mutual_info(static_data, moving_rotated, static_affine, moving_affine, 32)
-
     def MI_cost_translation(translations):
-        #get MI for translated moving_data
-        moving_translated = apply_translation(moving_data, rotations)
-        return mutual_info(static_data, moving_translated, static_affine, moving_affine, 32)
+        ## cost function for translations using MI
+        #create affine from new params
+        shift_affine = nib.affines.from_matvec(np.eye(3), translations)
+        updated_moving_affine = moving_affine.dot(shift_affine)
 
-    best_rotations = fmin_powell(MI_cost_rotation, [0,0,0], maxiter = iter)
+        #resample with new affine
+        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
 
-    best_translations = fmin_powell(MI_cost_translation, [0,0,0], maxiter = iter)
+        #get negative mutual information (static & new moving)
+        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 64)
 
-    r_x, r_y, r_z = best_rotations
-    best_rotations_matrix = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
+        return neg_MI
 
-    updated_moving_affine = nib.affines.from_matvec(best_rotations_matrix, best_translations)
+    def MI_cost_rotation(rotations):
+        ## cost function for rotations using MI
+        #create affine from new params
+        rot_mat = make_rot_mat(rotations)
+        shift_affine = nib.affines.from_matvec(rot_mat, np.zeros(3))
+
+        updated_moving_affine = moving_affine_translated.dot(shift_affine)
+
+        #resample with new affine
+        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
+
+        #get negative mutual information (static & new moving)
+        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 64)
+
+        return neg_MI
+
+    def make_rot_mat(rotations):
+        ##make (3,3) rotation matrix from radian rotation parameters
+        r_x,r_y,r_z = rotations
+        rot_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
+        return rot_mat
+
+    # get best translations
+    if partial in [0,1]:
+        best_translations = fmin_powell(MI_cost_translation, [0,0,0], maxiter = iter)
+    else:
+        best_translations = [0,0,0]
+    best_translations_affine = nib.affines.from_matvec(np.eye(3), best_translations)
+
+    # update moving affine to use best translation
+    moving_affine_translated = moving_affine.dot(best_translations_affine)
+
+    #get best rotations
+    if partial in [0,2]:
+        best_rotations = fmin_powell(MI_cost_rotation, [0,0,0], maxiter = iter)
+    else:
+        best_rotations = [0,0,0]
+
+    # combine best translations and rotations
+    best_rotations_mat = make_rot_mat(best_rotations)
+    updated_moving_affine = nib.affines.from_matvec(best_rotations_mat, best_translations)
 
     return updated_moving_affine
 
 
-def mutual_info(static_data, moving_data, static_affine, moving_affine, nbins):
+def mutual_info(static_data, moving_data, nbins):
     """ get mutual information (MI) between 2 arrays
     Parameters
     ----------
@@ -162,9 +199,9 @@ def mutual_info(static_data, moving_data, static_affine, moving_affine, nbins):
         mutual information value
 
     """
-    moving_resampled, new_affine = resample(static_data, moving_data, static_affine, moving_affine)
 
-    hist_2d, x_edges, y_edges = np.histogram2d(static_data.ravel(), moving_resampled.ravel(), bins=nbins) #get bin counts
+
+    hist_2d, x_edges, y_edges = np.histogram2d(static_data.ravel(), moving_data.ravel(), bins=nbins) #get bin counts
 
     hist_2d_p = hist_2d/float(hist_2d.sum()) #p(x,y)
     nzs = hist_2d_p > 0 #idx for cells>0
@@ -176,48 +213,3 @@ def mutual_info(static_data, moving_data, static_affine, moving_affine, nbins):
     MI = (hist_2d_p[nzs] * np.log(hist_2d_p[nzs]/px_py[nzs])).sum()
 
     return MI
-
-def apply_translation(img, translations):
-        """ apply translation to image
-
-        Parameters
-        ----------
-        img : array shape (I, J, K)
-            array with 3D data from original image
-
-        translations : vector shape (3,)
-            t_x, t_y, t_z voxels on axes
-
-        Returns
-        -------
-        img_translated : array shape (I, J, K)
-            array with 3D data of translated image
-
-        """
-
-        img_translated = affine_transform(img, np.eye(3), translations, order=1)
-        return img_translated
-
-
-def apply_rotation(img, rotations):
-    """ apply rotation to image
-
-    Parameters
-    ----------
-    img : array shape (I, J, K)
-        array with 3D data from original image
-
-    rotations : vector shape (3,)
-        r_x, r_y, r_z radians around axes
-
-    Returns
-    -------
-    img_rotated : array shape (I, J, K)
-        array with 3D data of rotated image
-
-    """
-    r_x, r_y, r_z = rotations
-    rotations_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
-
-    img_rotated = affine_transform(img, rotations_mat, np.zeros(3), order=1)
-    return img_rotated
