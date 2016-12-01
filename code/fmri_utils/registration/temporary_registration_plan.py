@@ -20,6 +20,8 @@ our plan:
     2. how do our results compare to dipy
 - add in pyramid strategy and compare accuracy/efficiency; compare to dipy again
 
+NOTE: should make option for sample slices for vis inspection
+
 ** write all code using data for subject10159;
 """
 #### FUNCTIONS TO WRITE
@@ -45,7 +47,7 @@ our plan:
 
 #center of mass transform (our version); from static and moving, produce com affine [DONE]
 
-#rigid transform (our version); from static and moving and com affine, produce rigid affine 
+#rigid transform (our version); from static and moving and com affine, produce rigid affine
 
 #affine transform (our version); from static and moving and rigid affine, produce final affine
 
