@@ -10,7 +10,7 @@ import nibabel as nib
 from scipy.ndimage import affine_transform, measurements
 from scipy.optimize import fmin_powell
 
-from fmri_utils.registration.shared import get_data_affine
+from fmri_utils.registration.shared import get_data_affine, make_rot_mat, decompose_rot_mat
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
 def resample(static_data, moving_data, static_affine, moving_affine):
@@ -216,6 +216,17 @@ def make_rot_mat(rotations):
     rot_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
     return rot_mat
 
+def decompose_rot_mat(R):
+    ## get radian rotation parameters from (3,3) rotation matrix
+    r_x = np.arctan2(R[2,1], R[2,2])
+    r_y = np.arctan2(-R[2,0], np.sqrt(R[2,1]**2 + R[2,2]**2))
+    r_z = np.arctan2(R[1,0], R[0,0])
+
+    return r_x, r_y, r_z
+
+
+
+'''
 def pyramid(static_data, moving_data, static_affine, moving_affine, transformation, level_iters, sigmas, factors):
     """ apply transformation optimization using multiple levels (gaussian pyramid)
     Parameters
@@ -252,3 +263,4 @@ def pyramid(static_data, moving_data, static_affine, moving_affine, transformati
     """
 
     assert(len(level_iters)==len(sigmas) & len(level_iters)==len(factors))
+'''
