@@ -1,3 +1,3 @@
-# Text file containing hashes of form <hash> <filename>
-# e.g.
-# 9b8cf2548b507334aad5ffc0de9d323e2189a847 my_first_image.nii
+85ad9b8d4eb87d61ad2f7077fc61ba2c49be39af mni_icbm152_t1_tal_nlin_asym_09a.nii 
+f962f8171523f8570c4b0a09a6a6fc250263bbf1 sub-10159_T1w.nii.gz 
+05e80b4950da9d73f01b3ee422f71f412b6e2f4e sub-10159_task-rest_bold.nii.gz 
