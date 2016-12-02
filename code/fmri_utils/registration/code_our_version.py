@@ -147,7 +147,7 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
         moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
 
         #get negative mutual information (static & new moving)
-        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 64)
+        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
 
         return neg_MI
 
@@ -184,10 +184,10 @@ def mutual_info(static_data, moving_data, nbins):
     """ get mutual information (MI) between 2 arrays
     Parameters
     ----------
-    img1 : array shape (I, J, ...)
+    static_data : array shape (I, J, ...)
         array of image 1
 
-    img2 : array shape (I, J, ...)
+    moving_data : array shape (I, J, ...)
         array of image 2
 
     nbins : int
@@ -199,7 +199,6 @@ def mutual_info(static_data, moving_data, nbins):
         mutual information value
 
     """
-
 
     hist_2d, x_edges, y_edges = np.histogram2d(static_data.ravel(), moving_data.ravel(), bins=nbins) #get bin counts
 

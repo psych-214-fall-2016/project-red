@@ -21,7 +21,6 @@ def get_data_affine(fname):
     affine : array shape (4, 4)
         affine for image file
     """
-    
     img = nib.load(fname)
     data = img.get_data()
     affine = img.get_affine()
