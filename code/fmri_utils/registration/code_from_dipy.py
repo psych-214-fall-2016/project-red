@@ -52,7 +52,8 @@ def basic_resample(static, moving):
 
     identity = np.eye(4)
     affine_map = AffineMap(identity, static.shape, static_grid2world, moving.shape, moving_grid2world)
-    return resampled = affine_map.transform(moving)
+    resampled = affine_map.transform(moving)
+    return resampled
 
 
 """
