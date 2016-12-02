@@ -17,9 +17,9 @@ from fmri_utils.registration.code_our_version import resample, transform_cmass, 
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
 
-MY_DIR = dirname(__file__)
-TEMPLATE_FILENAME = 'mni_icbm152_t1_tal_nlin_asym_09a.nii'
-ANAT_FILENAME = 'ds114_sub009_highres.nii'
+# MY_DIR = dirname(__file__)
+# TEMPLATE_FILENAME = 'mni_icbm152_t1_tal_nlin_asym_09a.nii'
+# ANAT_FILENAME = 'ds114_sub009_highres.nii'
 
 def test_resample():
     #check resample works, using fake data
@@ -90,26 +90,16 @@ def test_transform_rigid():
     FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
 
     new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 1)
-    assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
+    assert(np.allclose(new_affine,original_shift,atol=0.1)) #withing 0.1 vox
 
-    #check rotation only
-    rot_mat = z_rotmat(0.3).dot(y_rotmat(0.1)).dot(x_rotmat(0.1))
-    original_shift = nib.affines.from_matvec(rot_mat, [0,0,0])
-    mat, vec = nib.affines.to_matvec(original_shift)
-    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
-
-    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 2)
-    assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
-
-    #check translation & rotation --- doesn't work!!!
+    #check translation & rotation --- doesn't work!!! should use brain?
     rot_mat = z_rotmat(0.3).dot(y_rotmat(0.1)).dot(x_rotmat(0.1))
     original_shift = nib.affines.from_matvec(rot_mat, [2,2,1])
     mat, vec = nib.affines.to_matvec(original_shift)
     FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
 
-    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5, 2)
+    new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), 5)
     #assert(np.allclose(new_affine,original_shift,atol=0.5)) #withing 0.5 vox
-
 
     """
     add test with real brain images

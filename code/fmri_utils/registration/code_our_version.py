@@ -112,7 +112,6 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
     partial : int, flag
         0 = find best tranlation, then find best rotations
         1 = find best translation only
-        2 = find best rotation only
 
     Returns
     -------
@@ -135,13 +134,16 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
 
         return neg_MI
 
-    def MI_cost_rotation(rotations):
+    def MI_cost_trans_rotation(parameters):
         ## cost function for rotations using MI
+        translations = parameters[:3]
+        rotations = parameters[3:]
+
         #create affine from new params
         rot_mat = make_rot_mat(rotations)
-        shift_affine = nib.affines.from_matvec(rot_mat, np.zeros(3))
+        shift_affine = nib.affines.from_matvec(rot_mat,translations)
 
-        updated_moving_affine = moving_affine_translated.dot(shift_affine)
+        updated_moving_affine = moving_affine.dot(shift_affine)
 
         #resample with new affine
         moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
@@ -151,31 +153,25 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, iter
 
         return neg_MI
 
-    def make_rot_mat(rotations):
-        ##make (3,3) rotation matrix from radian rotation parameters
-        r_x,r_y,r_z = rotations
-        rot_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
-        return rot_mat
 
     # get best translations
-    if partial in [0,1]:
-        best_translations = fmin_powell(MI_cost_translation, [0,0,0], maxiter = iter)
-    else:
-        best_translations = [0,0,0]
-    best_translations_affine = nib.affines.from_matvec(np.eye(3), best_translations)
+    best_translations = fmin_powell(MI_cost_translation, [0,0,0], maxiter = iter)
+    #best_translations_affine = nib.affines.from_matvec(np.eye(3), best_translations)
 
     # update moving affine to use best translation
-    moving_affine_translated = moving_affine.dot(best_translations_affine)
+    #moving_affine_translated = moving_affine.dot(best_translations_affine)
 
     #get best rotations
-    if partial in [0,2]:
-        best_rotations = fmin_powell(MI_cost_rotation, [0,0,0], maxiter = iter)
+    init_params = list(best_translations) + [0,0,0]
+    if partial==0:
+        best_params = fmin_powell(MI_cost_trans_rotation, init_params, maxiter = iter)
     else:
-        best_rotations = [0,0,0]
+        best_params = init_params
 
     # combine best translations and rotations
-    best_rotations_mat = make_rot_mat(best_rotations)
-    updated_moving_affine = nib.affines.from_matvec(best_rotations_mat, best_translations)
+    print(best_params)
+    best_rotations_mat = make_rot_mat(best_params[3:])
+    updated_moving_affine = nib.affines.from_matvec(best_rotations_mat, best_params[:3])
 
     return updated_moving_affine
 
@@ -212,3 +208,47 @@ def mutual_info(static_data, moving_data, nbins):
     MI = (hist_2d_p[nzs] * np.log(hist_2d_p[nzs]/px_py[nzs])).sum()
 
     return MI
+
+
+def make_rot_mat(rotations):
+    ##make (3,3) rotation matrix from radian rotation parameters
+    r_x,r_y,r_z = rotations
+    rot_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
+    return rot_mat
+
+def pyramid(static_data, moving_data, static_affine, moving_affine, transformation, level_iters, sigmas, factors):
+    """ apply transformation optimization using multiple levels (gaussian pyramid)
+    Parameters
+    ----------
+    static_data : array shape (I, J, K)
+        array with 3D data from static image
+
+    moving_data : array shape (I, J, K)
+        array with 3D data from moving image
+
+    static_affine : array shape (4, 4)
+        affine for static image
+
+    moving_affine : array shape (4, 4)
+        starting affine for static moving
+
+    transformation : function
+        transformation function (e.g. transform_rigid, transform_afffine)
+
+    level_iters : list of ints, length N
+        max number of iterations at each level of the pyramid
+
+    sigmas : list of ints, length N
+        sigma for spatial smoothing at each level of the pyramid
+
+    factors : list of ints, length N
+        voxel factor at each level of pyramid (e.g. [4, 2] -> #/4, #/2 voxel dimensions)
+
+    Returns
+    -------
+    updated_moving_affine : array shape (4, 4)
+        new affine for moving image to ref
+
+    """
+
+    assert(len(level_iters)==len(sigmas) & len(level_iters)==len(factors))
