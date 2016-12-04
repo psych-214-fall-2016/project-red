@@ -88,7 +88,7 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
     return updated_moving_affine
 
 
-def transform_rigid(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial=0):
+def transform_rigid(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial="all"):
     """ get moving image affine, to use when resampling moving in static space
         --> does rigid (3 trans, 3 rot) alignment, max "iter" iterations
 
@@ -113,8 +113,9 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
         max number iterations in optimization
 
     partial : int, flag
-        0 = best translations + rotations
-        1 = best translations
+        "all" = best translations (3 params) -> best translations and rotations (6 params)
+        "translations" = best translations only (3 params)
+        "rotations" = best rotations only (3 params)
 
     Returns
     -------
@@ -137,10 +138,14 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
 
         return neg_MI
 
-    def MI_cost_add_rotation(parameters):
-        ## cost function for rotations using MI
-        translations = parameters[:3]
-        rotations = parameters[3:]
+    def MI_cost_add_rotation(parameters,subset="all",fixed_parameters=[]):
+            ## cost function for rotations using MI
+        if subset=="all":
+            translations = parameters[:3]
+            rotations = parameters[3:]
+        elif subset=="rotations":
+            translations = fixed_parameters
+            rotations = parameters
 
         #create affine from new params
         rot_mat = make_rot_mat(rotations)
@@ -158,18 +163,26 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
 
     # get starting guess
     mat0, vec0 = nib.affines.to_matvec(starting_affine)
-    rotations0 = decompose_rot_mat(mat0)
+    rotations0 = list(decompose_rot_mat(mat0))
     translations0 = list(vec0)
 
     # get best translations
-    best_translations = fmin_powell(MI_cost_translation, translations0, maxiter = iter)
+    if partial in ["all", "translations"]:
+        best_translations = fmin_powell(MI_cost_translation, translations0, maxiter = iter)
+    elif partial in ["rotations"]:
+        best_translations = translations0
 
-    #get best translations + rotations
-    init_params = list(best_translations) + rotations0
-    if partial==0:
-        best_params = fmin_powell(MI_cost_add_rotation, init_params, maxiter = iter)
-    else:
-        best_params = init_params
+    # update starting guess
+    params0 = list(best_translations) + rotations0
+
+    # get best rotations
+    if partial in ["all"]:
+        best_params = fmin_powell(MI_cost_add_rotation, params0, args = (partial,[]), maxiter = iter)
+    elif partial in ["rotations"]:
+        best_rotations = fmin_powell(MI_cost_add_rotation, rotations0, args = (partial, params0[:3]), maxiter = iter)
+        best_params = params0[:3] + list(best_rotations)
+    elif partial in ["translations"]:
+        best_params = params0
 
     # combine best translations and rotations
     best_rotations_mat = make_rot_mat(best_params[3:])
@@ -177,7 +190,7 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
 
     return updated_moving_affine
 
-def transform_affine(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial=0):
+def transform_affine(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial="all"):
     """ get moving image affine, to use when resampling moving in static space
         --> does affine (3 trans, 3 rot, 3 scale, 6 shear) alignment, max "iter" iterations
 
@@ -202,8 +215,9 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
         max number iterations in optimization
 
     partial : int, flag
-        0 = best translations + rotations + scales + shears
-        1 = best translations + rotations + scales
+        "all" = best translations, rotations, and scales (9 params) -> best translations, rotations, scales, and shears (15 params)
+        "translations" = best translations only (3 params)
+        "rotations" = best rotations only (3 params)
 
     Returns
     -------
@@ -287,7 +301,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
     updated_moving_affine = nib.affines.from_matvec(update_rot_mat,translations)
 
     return updated_moving_affine
-    
+
 
 def mutual_info(static_data, moving_data, nbins):
     """ get mutual information (MI) between 2 arrays
