@@ -21,7 +21,7 @@ def resample(static_data, moving_data, static_affine, moving_affine):
     static_data : array shape (I, J, K)
         array with 3D data from static image
 
-     moving_data : array shape (I, J, K)
+    moving_data : array shape (I, J, K)
         array with 3D data from moving image
 
     static_affine : array shape (4, 4)
@@ -34,7 +34,6 @@ def resample(static_data, moving_data, static_affine, moving_affine):
     -------
     moving_in_stat : array shape (I, J, K)
         array with 3D from moving image resampled in static image space
-
 
     """
 
@@ -87,12 +86,49 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
     return change_affine
 
 def MI_cost(parameters, subset, fixed_parameters, static_data, moving_data, static_affine, moving_affine):
-    ## cost function for translations & rotations using MI
+    """ mutual information cost function: transforms moving image with updated
+        values from optimizer and returns similartiy metric (negative
+        mutual information)
+
+    Parameters
+    ----------
+    parameters : vector length (N,)
+        vector with variable parameters for optimizer
+
+    subset : str
+        "all" : all parameters are variable (N=3, 6, 9, or 15)
+        "translations", "rotations", "scales", or "shears" : only corresponding parametes are varible
+
+    fixed_parameters : list length(N0,)
+        vector with fixed parameters for optimizer
+        temp_params = fixed_parameters + list(parameters)
+        -> temp_params = [3 translations] + [3 rotations] + [3 scales] + [6 shears]
+        -> len(temp_params) in [3,6,9,15]; includes increasingly more params
+
+    static_data : array shape (I, J, K)
+        array with 3D data from static image
+
+    moving_data : array shape (I, J, K)
+        array with 3D data from moving image
+
+    static_affine : array shape (4, 4)
+        affine for static image
+
+    moving_affine : array shape (4, 4)
+        affine for moving image
+
+    Returns
+    -------
+    neg_MI : float
+        negative mutual information value
+
+    """
+
     if subset=="all":
         temp_params = list(parameters)
     else:
         temp_params = fixed_parameters + list(parameters)
-    print(temp_params)
+
     #create affine from new params
     change_affine = params2affine(temp_params)
     updated_moving_affine = change_affine.dot(moving_affine)
@@ -102,7 +138,6 @@ def MI_cost(parameters, subset, fixed_parameters, static_data, moving_data, stat
 
     #get negative mutual information (static & new moving)
     neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
-
 
     return neg_MI
 
@@ -130,7 +165,7 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
     iter : int
         max number iterations in optimization
 
-    partial : int, flag
+    partial : str
         "all" = best translations (3 params) -> best translations and rotations (6 params)
         "translations" = best translations only (3 params)
         "rotations" = best rotations only (3 params)
@@ -141,7 +176,6 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
         new affine to adjust moving; updated_moving_affine = change_affine.dot(moving_affine)
 
     """
-
     # get starting guess
     mat0, vec0 = nib.affines.to_matvec(starting_affine)
     rotations0 = list(decompose_rot_mat(mat0))
@@ -195,7 +229,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
     iter : int
         max number iterations in optimization
 
-    partial : int, flag
+    partial : str
         "all" = best translations, rotations, and scales (9 params) -> best translations, rotations, scales, and shears (15 params)
         "translations" = best translations only (3 params)
         "rotations" = best rotations only (3 params)
@@ -274,21 +308,25 @@ def mutual_info(static_data, moving_data, nbins):
 
     return MI
 
-def make_shear_mat(shears):
-    ## make shear matrix from 6 values
-    shear_mat = np.eye(3)
-    shear_mat[0,1] = shears[0]
-    shear_mat[0,2] = shears[1]
-    shear_mat[1,0] = shears[2]
-    shear_mat[1,2] = shears[3]
-    shear_mat[2,0] = shears[4]
-    shear_mat[2,1] = shears[5]
-
-    return shear_mat
 
 
 def params2affine(params):
+    """ create affine from list of parameters
+    Parameters
+    ----------
+    params : list length N
+        list of parameters; default no change if parameters not given
+        N=3 -> [3 translations] (+ [0]*3 + [1]*3 + [0]*6)
+        N=6 -> [3 translations] + [3 rotations] (+ [1]*3 + [0]*6)
+        N=9 -> [3 translations] + [3 rotations] + [3 scales] (+ [0]*6)
+        N=15 -> [3 translations] + [3 rotations] + [3 scales] + [6 shears]
 
+    Returns
+    -------
+    affine : array shape (4, 4)
+        affine from parameters
+
+    """
     #translation vector
     translations = params[:3]
 
@@ -311,7 +349,9 @@ def params2affine(params):
         shears = params[9:]
     else:
         shears = [0]*6
-    shear_mat = make_shear_mat(shears)
+    shear_mat = np.eye(3)
+    idx = 1-np.eye(3)
+    shear_mat[idx==1] = shears
 
     updated_rot_mat = rot_mat.dot(scale_mat).dot(shear_mat)
     affine = nib.affines.from_matvec(updated_rot_mat,translations)
