@@ -13,7 +13,7 @@ import numpy.linalg as npl
 from scipy.ndimage import affine_transform
 
 from fmri_utils.registration.shared import get_data_affine, decompose_rot_mat
-from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid
+from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid, transform_affine, params2affine
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
 
@@ -124,6 +124,42 @@ def test_transform_rigid():
 
     #assert(np.allclose(new_translation,original_translation,atol=0.1)) #withing 0.1 vox
     #assert(np.allclose(new_rotation,original_rotation,atol=0.15)) #withing 0.1 radian
+
+    """
+    add test with real brain images
+    """
+
+def test_transform_affine():
+    #check rigid transform works, using fake data
+    FAKE = np.zeros((30,30,30))
+    FAKE[10:20,10:20,10:20] = np.random.rand(10,10,10)
+    FAKE_affine = np.eye(4)
+
+    # check scales only
+    original_scale= [1.5, 1, 0.8]
+    temp_params = [0]*6 + original_scale
+    original_shift = params2affine(temp_params)
+
+    mat, vec = nib.affines.to_matvec(original_shift)
+    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+
+    new_affine = transform_affine(FAKE, FAKE_moved, np.eye(4), np.eye(4), np.eye(4), 10, "scales")
+    new_scale = [new_affine[0,0],new_affine[1,1], new_affine[2,2]]
+    assert(np.allclose(new_scale,original_scale,atol=0.15)) #withing 0.1 radian
+
+    # check shears only
+    original_shear= [0, 0.2, 0.4]
+    temp_params = [0]*6 + [1]*3 + original_shear
+    original_shift = params2affine(temp_params)
+
+    mat, vec = nib.affines.to_matvec(original_shift)
+    FAKE_moved = affine_transform(FAKE, mat, vec, order=1)
+
+    new_affine = transform_affine(FAKE, FAKE_moved, np.eye(4), np.eye(4), np.eye(4), 10, "shears")
+    new_shear = [new_affine[0,1],new_affine[0,2],new_affine[1,2]]
+
+    assert(np.allclose(new_shear,original_shear,atol=0.15)) #withing 0.1 radian
+
 
     """
     add test with real brain images

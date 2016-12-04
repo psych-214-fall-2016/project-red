@@ -207,7 +207,7 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
 
 def transform_affine(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial="all"):
     """ get moving image affine, to use when resampling moving in static space
-        --> does affine (3 trans, 3 rot, 3 scale, 6 shear) alignment, max "iter" iterations
+        --> does affine (3 trans, 3 rot, 3 scale, 3 shear) alignment, max "iter" iterations
 
     Parameters
     ----------
@@ -230,7 +230,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
         max number iterations in optimization
 
     partial : str
-        "all" = best translations, rotations, and scales (9 params) -> best translations, rotations, scales, and shears (15 params)
+        "all" = best translations, rotations, and scales (9 params) -> best translations, rotations, scales, and shears (12 params)
         "translations" = best translations only (3 params)
         "rotations" = best rotations only (3 params)
 
@@ -246,9 +246,9 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
     rotations0 = list(decompose_rot_mat(mat0))
     translations0 = list(vec0)
     scales0 = [1]*3
-    shears0 = [0]*6
+    shears0 = [0]*3
 
-    params0 = translation0 + rotations0 + scales0
+    params0 = translations0 + rotations0 + scales0
 
     # get best scales
     if partial in ["all"]:
@@ -271,7 +271,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
         best_params = params1[:9] + list(best_shears)
 
     #combine best params
-    change_affine = params2affine(temp_params)
+    change_affine = params2affine(best_params)
     return change_affine
 
 
@@ -316,10 +316,10 @@ def params2affine(params):
     ----------
     params : list length N
         list of parameters; default no change if parameters not given
-        N=3 -> [3 translations] (+ [0]*3 + [1]*3 + [0]*6)
-        N=6 -> [3 translations] + [3 rotations] (+ [1]*3 + [0]*6)
-        N=9 -> [3 translations] + [3 rotations] + [3 scales] (+ [0]*6)
-        N=15 -> [3 translations] + [3 rotations] + [3 scales] + [6 shears]
+        N=3 -> [3 translations] (+ [0]*3 + [1]*3 + [0]*3)
+        N=6 -> [3 translations] + [3 rotations] (+ [1]*3 + [0]*3)
+        N=9 -> [3 translations] + [3 rotations] + [3 scales] (+ [0]*3)
+        N=15 -> [3 translations] + [3 rotations] + [3 scales] + [3 shears]
 
     Returns
     -------
@@ -348,10 +348,11 @@ def params2affine(params):
     if len(params)>9:
         shears = params[9:]
     else:
-        shears = [0]*6
+        shears = [0]*3
     shear_mat = np.eye(3)
-    idx = 1-np.eye(3)
-    shear_mat[idx==1] = shears
+    shear_mat[0,1] = shears[0]
+    shear_mat[0,2] = shears[1]
+    shear_mat[1,2] = shears[2]
 
     updated_rot_mat = rot_mat.dot(scale_mat).dot(shear_mat)
     affine = nib.affines.from_matvec(updated_rot_mat,translations)
