@@ -66,8 +66,8 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
 
     Returns
     -------
-    updated_moving_affine : array shape (4, 4)
-        new affine for moving image to ref
+    change_affine : array shape (4, 4)
+        new affine to adjust moving; updated_moving_affine = change_affine.dot(moving_affine)
 
     """
 
@@ -82,11 +82,29 @@ def transform_cmass(static_data, moving_data, static_affine, moving_affine):
 
     diff_cmass_in_ref = static_cmass_in_ref - moving_cmass_in_ref
 
-    shift = nib.affines.from_matvec(np.eye(3), diff_cmass_in_ref)
-    updated_moving_affine = shift.dot(moving_affine)
+    change_affine = nib.affines.from_matvec(np.eye(3), diff_cmass_in_ref)
 
-    return updated_moving_affine
+    return change_affine
 
+def MI_cost(parameters, subset, fixed_parameters, static_data, moving_data, static_affine, moving_affine):
+    ## cost function for translations & rotations using MI
+    if subset=="all":
+        temp_params = list(parameters)
+    else:
+        temp_params = fixed_parameters + list(parameters)
+    print(temp_params)
+    #create affine from new params
+    change_affine = params2affine(temp_params)
+    updated_moving_affine = change_affine.dot(moving_affine)
+
+    #resample with new affine
+    moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
+
+    #get negative mutual information (static & new moving)
+    neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
+
+
+    return neg_MI
 
 def transform_rigid(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial="all"):
     """ get moving image affine, to use when resampling moving in static space
@@ -119,76 +137,39 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
 
     Returns
     -------
-    updated_moving_affine : array shape (4, 4)
-        new affine for moving image to ref
+    change_affine : array shape (4, 4)
+        new affine to adjust moving; updated_moving_affine = change_affine.dot(moving_affine)
 
     """
-
-    def MI_cost_translation(translations):
-        ## cost function for translations using MI
-        #create affine from new params
-        shift_affine = nib.affines.from_matvec(np.eye(3), translations)
-        updated_moving_affine = moving_affine.dot(shift_affine)
-
-        #resample with new affine
-        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
-
-        #get negative mutual information (static & new moving)
-        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 64)
-
-        return neg_MI
-
-    def MI_cost_add_rotation(parameters,subset="all",fixed_parameters=[]):
-            ## cost function for rotations using MI
-        if subset=="all":
-            translations = parameters[:3]
-            rotations = parameters[3:]
-        elif subset=="rotations":
-            translations = fixed_parameters
-            rotations = parameters
-
-        #create affine from new params
-        rot_mat = make_rot_mat(rotations)
-        shift_affine = nib.affines.from_matvec(rot_mat,translations)
-
-        updated_moving_affine = moving_affine.dot(shift_affine)
-
-        #resample with new affine
-        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
-
-        #get negative mutual information (static & new moving)
-        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
-
-        return neg_MI
 
     # get starting guess
     mat0, vec0 = nib.affines.to_matvec(starting_affine)
     rotations0 = list(decompose_rot_mat(mat0))
     translations0 = list(vec0)
 
+    params0 = translations0
+
     # get best translations
     if partial in ["all", "translations"]:
-        best_translations = fmin_powell(MI_cost_translation, translations0, maxiter = iter)
+        best_translations = fmin_powell(MI_cost, params0[:3], args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
+        params1 = list(best_translations)
     elif partial in ["rotations"]:
-        best_translations = translations0
+        params1 = params0
 
-    # update starting guess
-    params0 = list(best_translations) + rotations0
+    params1 = params1 + rotations0
 
     # get best rotations
     if partial in ["all"]:
-        best_params = fmin_powell(MI_cost_add_rotation, params0, args = (partial,[]), maxiter = iter)
+        best_params = fmin_powell(MI_cost, params1, args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
     elif partial in ["rotations"]:
-        best_rotations = fmin_powell(MI_cost_add_rotation, rotations0, args = (partial, params0[:3]), maxiter = iter)
-        best_params = params0[:3] + list(best_rotations)
+        best_rotations = fmin_powell(MI_cost, params1[3:], args = (partial, params1[:3], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
+        best_params = params1[:3] + list(best_rotations)
     elif partial in ["translations"]:
-        best_params = params0
+        best_params = params1
 
-    # combine best translations and rotations
-    best_rotations_mat = make_rot_mat(best_params[3:])
-    updated_moving_affine = nib.affines.from_matvec(best_rotations_mat, best_params[:3])
-
-    return updated_moving_affine
+    # make best affine
+    change_affine = params2affine(best_params)
+    return change_affine
 
 def transform_affine(static_data, moving_data, static_affine, moving_affine, starting_affine, iter, partial="all"):
     """ get moving image affine, to use when resampling moving in static space
@@ -221,86 +202,43 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
 
     Returns
     -------
-    updated_moving_affine : array shape (4, 4)
-        new affine for moving image to ref
+    change_affine : array shape (4, 4)
+        new affine to adjust moving; updated_moving_affine = change_affine.dot(moving_affine)
 
     """
 
-
-    def MI_cost_add_scales(parameters):
-        ## cost function for rotations using MI
-        translations = parameters[:3]
-        rotations = parameters[3:6]
-        scales = parameters[6:]
-
-        #create affine from new params
-        rot_mat = make_rot_mat(rotations)
-        scale_mat = np.diagflat(scales)
-
-        updated_rot_mat = rot_mat.dot(scale_mat)
-        shift_affine = nib.affines.from_matvec(update_rot_mat,translations)
-        updated_moving_affine = moving_affine.dot(shift_affine)
-
-        #resample with new affine
-        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
-
-        #get negative mutual information (static & new moving)
-        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
-
-        return neg_MI
-
-    def MI_cost_add_shears(parameters):
-        ## cost function for rotations using MI
-        translations = parameters[:3]
-        rotations = parameters[3:6]
-        scales = parameters[6:9]
-        shears = parameters[9:]
-
-        #create affine from new params
-        rot_mat = make_rot_mat(rotations)
-        scale_mat = np.diagflat(scales)
-        shear_mat = make_shear_mat(shears)
-
-        updated_rot_mat = rot_mat.dot(scale_mat).dot(shear_mat)
-        shift_affine = nib.affines.from_matvec(update_rot_mat,translations)
-        updated_moving_affine = moving_affine.dot(shift_affine)
-
-        #resample with new affine
-        moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
-
-        #get negative mutual information (static & new moving)
-        neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
-
-        return neg_MI
-
-
     # get starting guess
     mat0, vec0 = nib.affines.to_matvec(starting_affine)
-    rotations0 = decompose_rot_mat(mat0)
+    rotations0 = list(decompose_rot_mat(mat0))
     translations0 = list(vec0)
+    scales0 = [1]*3
+    shears0 = [0]*6
 
-    # get best translations + rotations + scales
-    init_params = list(vec0) + list(rotations0) + [0,0,0]
-    best_params = fmin_powell(MI_cost_add_scales, init_params, maxiter = iter)
+    params0 = translation0 + rotations0 + scales0
 
-    #get best translations + rotations + scales + shears
-    init_params_shear = list(best_params) + [0,0,0,0,0,0]
-    best_params = fmin_powell(MI_cost_add_shears, init_params, maxiter = iter)
+    # get best scales
+    if partial in ["all"]:
+        params1 = list(fmin_powell(MI_cost, params0, args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter))
+    elif partial in ["scales"]:
+        best_scales = fmin_powell(MI_cost, scales0, args = (partial, params0[:6], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
+        params1 = params0[:6] + list(best_scales)
+    elif partial in ["shears"]:
+        params1 = params0
+
+    params1 = params1 + shears0
+
+    # get best shears
+    if partial in ["all"]:
+        best_params = list(fmin_powell(MI_cost, params1, args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter))
+    elif partial in ["scales"]:
+        best_params = params1
+    elif partial in ["shears"]:
+        best_shears = fmin_powell(MI_cost, params1[9:], args = (partial, params1[:9], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
+        best_params = params1[:9] + list(best_shears)
 
     #combine best params
-    translations = best_parameters[:3]
-    rotations = best_parameters[3:6]
-    scales = best_parameters[6:9]
-    shears = best_parameters[9:]
-
-    rot_mat = make_rot_mat(rotations)
-    scale_mat = np.diagflat(scales)
-    shear_mat = make_shear_mat(shears)
-
-    updated_rot_mat = rot_mat.dot(scale_mat).dot(shear_mat)
-    updated_moving_affine = nib.affines.from_matvec(update_rot_mat,translations)
-
-    return updated_moving_affine
+    change_affine = params2affine(temp_params)
+    return change_affine
 
 
 def mutual_info(static_data, moving_data, nbins):
@@ -338,7 +276,7 @@ def mutual_info(static_data, moving_data, nbins):
 
 def make_shear_mat(shears):
     ## make shear matrix from 6 values
-    shear_mat = np.zeros((3,3))
+    shear_mat = np.eye(3)
     shear_mat[0,1] = shears[0]
     shear_mat[0,2] = shears[1]
     shear_mat[1,0] = shears[2]
@@ -349,7 +287,40 @@ def make_shear_mat(shears):
     return shear_mat
 
 
+def params2affine(params):
+
+    #translation vector
+    translations = params[:3]
+
+    #rotation matrix
+    if len(params)>3:
+        rotations = params[3:6]
+    else:
+        rotations = [0]*3
+    rot_mat = make_rot_mat(rotations)
+
+    #scaling matrix
+    if len(params)>6:
+        scales = params[6:9]
+    else:
+        scales = [1]*3
+    scale_mat = np.diagflat(scales)
+
+    #shearing matrix
+    if len(params)>9:
+        shears = params[9:]
+    else:
+        shears = [0]*6
+    shear_mat = make_shear_mat(shears)
+
+    updated_rot_mat = rot_mat.dot(scale_mat).dot(shear_mat)
+    affine = nib.affines.from_matvec(updated_rot_mat,translations)
+
+    return affine
+
+
 '''
+
 def pyramid(static_data, moving_data, static_affine, moving_affine, transformation, level_iters, sigmas, factors):
     """ apply transformation optimization using multiple levels (gaussian pyramid)
     Parameters

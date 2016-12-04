@@ -110,7 +110,7 @@ def test_transform_rigid():
 
     # check translation & rotations
     original_translation = [2,2,1]
-    original_rotation = [0.5, 0.2, -0.2]
+    original_rotation = [0.5, -0.2, 0.2]
     r_x, r_y, r_z = original_rotation
     rot_mat = z_rotmat(r_z).dot(y_rotmat(r_y)).dot(x_rotmat(r_x))
     original_shift = nib.affines.from_matvec(rot_mat, original_translation)
