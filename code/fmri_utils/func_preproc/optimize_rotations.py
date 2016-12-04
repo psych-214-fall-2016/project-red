@@ -6,11 +6,10 @@ import numpy as np  # the Python array package
 import matplotlib.pyplot as plt  # the Python plotting package
 import scipy.ndimage as snd
 from scipy.optimize import fmin_powell
-# - set gray colormap and nearest neighbor interpolation by default
-plt.rcParams['image.cmap'] = 'gray'
-plt.rcParams['image.interpolation'] = 'nearest'
-# Tell numpy to print numbers to 4 decimal places only
-np.set_printoptions(precision=4, suppress=True)
+
+# import of rotations code
+#from rotations import x_rotmat, y_rotmat, z_rotmat
+from .rotations import x_rotmat, y_rotmat, z_rotmat
 
 """ Common definitions for the following functions:
 
@@ -40,17 +39,17 @@ def correl_mismatch(vol0, vol1):
 
 # Resampling function for any given x, y, z rotation
 def apply_rotations(vol, rotations):
-        """ Make a new copy of `vol` rotated by `rotations` along x,y,z (pitch, yaw, roll?)
+    """ Make a new copy of `vol` rotated by `rotations` along x,y,z (pitch, yaw, roll?)
 
         inputs:
             vol (3D volume to be rotated by the given inputs)
             rotations (rotation is a sequence or array length 3, containing
-            the (x, y, z) rotations in degrees. Values in `rotations` can be
+            the (x, y, z) rotations in radians. Values in `rotations` can be
             positive or negative,and can be floats.)
 
         outputs:
             rot_vol (new copy of vol rotated by x,y,z inputs)
-        """
+    """
     r_x, r_y, r_z = rotations
     rotation_matrix = z_rotmat(r_z).dot(y_rotmat(r_y).dot(x_rotmat(r_x)))
     # apply rotations with affine_transform to make new image
