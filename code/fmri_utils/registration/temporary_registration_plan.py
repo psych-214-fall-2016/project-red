@@ -20,12 +20,14 @@ our plan:
     2. how do our results compare to dipy
 - add in pyramid strategy and compare accuracy/efficiency; compare to dipy again
 
+NOTE: should make option for sample slices for vis inspection
+
 ** write all code using data for subject10159;
 """
 #### FUNCTIONS TO WRITE
 ## shared.py
 
-#load data into python; define `static` and `moving` [Zuzanna]
+#load data into python; define `static` and `moving` [Zuzanna-- DONE]
 
 
 ## code_from_dipy.py [Michael]
@@ -41,9 +43,9 @@ our plan:
 
 ## code_our_version.py [Zuzanna]
 
-#resample (our version); from static and moving, produce new affine
+#resample (our version); from static and moving, produce new affine [new affine = static affine] [DONE]
 
-#center of mass transform (our version); from static and moving, produce com affine
+#center of mass transform (our version); from static and moving, produce com affine [DONE]
 
 #rigid transform (our version); from static and moving and com affine, produce rigid affine
 
