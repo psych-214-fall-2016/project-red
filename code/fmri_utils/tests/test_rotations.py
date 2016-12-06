@@ -13,6 +13,7 @@ from scipy.optimize import fmin_powell
 
 from os.path import dirname, join as pjoin
 MY_DIR = dirname(__file__)
+
 EXAMPLE_FILENAME = 'ds114_sub009_t2r1.nii'
 
 #from fmri_utils.func_preproc.translations import cost_at_xyz, optimize_trans_vol
@@ -24,7 +25,7 @@ from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
 def test_optimize_rot_vol():
     # Test optimization of rotations between two volumes
-
+    print(MY_DIR)
     example_path = pjoin(MY_DIR, EXAMPLE_FILENAME)
     #expected_values = np.loadtxt(pjoin(MY_DIR, 'global_signals.txt'))
 
@@ -36,21 +37,21 @@ def test_optimize_rot_vol():
     vol1 = data[..., 5]
 
     # add an intentionally rotated volume by X, Y, Z
-    X = x_rotmat(0.03)
+    X = x_rotmat(0.003)
     #- * radians around the y axis, then
-    Y = y_rotmat(0.09)
+    Y = y_rotmat(0.005)
     #- * radians around the z axis.
-    Z = z_rotmat(-0.05)
+    Z = z_rotmat(-0.009)
     #- Mutiply matrices together to get matrix describing all 3 rotations
     M = Z.dot(Y.dot(X))
     rotated_vol1 = snd.affine_transform(vol1, M)
 
-    rotations = np.array([-0.03, -0.09, 0.05])
+    rotations = np.array([-0.003, -0.005, 0.009])
 
     # test to see whether to optimization of rotation function
     #  indeed captures a very similar volume between the rotated and original
 
     derotated_vol1, best_params = optimize_rot_vol(vol1, rotated_vol1)
-    assert_almost_equal(best_params, rotations, decimal = 2)
+    assert_almost_equal(best_params, rotations, decimal = 4)
 
     return
