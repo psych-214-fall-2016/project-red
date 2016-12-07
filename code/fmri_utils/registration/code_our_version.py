@@ -360,7 +360,7 @@ def params2affine(params):
     return affine
 
 
-'''
+
 
 def pyramid(static_data, moving_data, static_affine, moving_affine, transformation, level_iters, sigmas, factors):
     """ apply transformation optimization using multiple levels (gaussian pyramid)
@@ -398,4 +398,13 @@ def pyramid(static_data, moving_data, static_affine, moving_affine, transformati
     """
 
     assert(len(level_iters)==len(sigmas) & len(level_iters)==len(factors))
-'''
+    nlevels = len(level_iters)
+
+    static_shape = np.array(static_data.shape)
+
+    for i in range(nlevels):
+        print('working on level 1')
+        static_resize_empty = np.zeros(static_shape/factors[i])
+        static_resize_affine = nib.affine.from_matvec(np.eye(3)*factors[i], [0,0,0])
+
+        static_resize_data = resample(static_resize_empty, static_data, np.eye(4), static_resize_affine)
