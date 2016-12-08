@@ -30,7 +30,6 @@ moving_affine = sub10159_anat.get_affine()
 print('downsampling data...')
 SCALE = 0.5
 SCALE_affine = nib.affines.from_matvec(np.diagflat([1/SCALE]*3), np.zeros(3))
-mat, vec = nib.affines.to_matvec(SCALE_affine)
 
 static_scaled_shape = (np.array(static.shape)*SCALE).astype('int')
 moving_scaled_shape = (np.array(moving.shape)*SCALE).astype('int')
@@ -86,19 +85,20 @@ regtools.overlay_slices(static, rigid, None, 0, "Static", "Moving", "rigid_0.png
 regtools.overlay_slices(static, rigid, None, 1, "Static", "Moving", "rigid_1.png")
 regtools.overlay_slices(static, rigid, None, 2, "Static", "Moving", "rigid_2.png")
 
-## affine: translation, rotation, and scaling
-print('working on scaled*.png')
-scaling_affine = transform_affine(static, moving, static_affine, moving_affine, rigid_affine, 10, "scales")
-updated_moving_affine = scaling_affine.dot(moving_affine)
-scaled = resample(static, moving, static_affine, updated_moving_affine)
-
-regtools.overlay_slices(static, scaled, None, 0, "Static", "Moving", "scaled_0.png")
-regtools.overlay_slices(static, scaled, None, 1, "Static", "Moving", "scaled_1.png")
-regtools.overlay_slices(static, scaled, None, 2, "Static", "Moving", "scaled_2.png")
+# ## affine: translation, rotation, and scaling
+# print('working on scaled*.png')
+# scaling_affine = transform_affine(static, moving, static_affine, moving_affine, rigid_affine, 10, "scales")
+# updated_moving_affine = scaling_affine.dot(moving_affine)
+# scaled = resample(static, moving, static_affine, updated_moving_affine)
+#
+# regtools.overlay_slices(static, scaled, None, 0, "Static", "Moving", "scaled_0.png")
+# regtools.overlay_slices(static, scaled, None, 1, "Static", "Moving", "scaled_1.png")
+# regtools.overlay_slices(static, scaled, None, 2, "Static", "Moving", "scaled_2.png")
 
 ## affine: translation, rotation, scaling, and shearing
 print('working on sheared*.png')
-shearing_affine = transform_affine(static, moving, static_affine, moving_affine, scaling_affine, 10, "all")
+# shearing_affine = transform_affine(static, moving, static_affine, moving_affine, scaling_affine, 10, "all")
+shearing_affine = transform_affine(static, moving, static_affine, moving_affine, rigid_affine, 10, "all")
 updated_moving_affine = shearing_affine.dot(moving_affine)
 sheared = resample(static, moving, static_affine, updated_moving_affine)
 

@@ -184,10 +184,10 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
     params0 = translations0
 
     # get best translations
-    if partial in ["all", "translations"]:
+    if partial in ["translations"]:
         best_translations = fmin_powell(MI_cost, params0[:3], args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
         params1 = list(best_translations)
-    elif partial in ["rotations"]:
+    elif partial in ["all","rotations"]:
         params1 = params0
 
     params1 = params1 + rotations0
@@ -252,7 +252,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
 
     # get best scales
     if partial in ["all"]:
-        params1 = list(fmin_powell(MI_cost, params0, args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter))
+        params1 = params0
     elif partial in ["scales"]:
         best_scales = fmin_powell(MI_cost, scales0, args = (partial, params0[:6], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
         params1 = params0[:6] + list(best_scales)
