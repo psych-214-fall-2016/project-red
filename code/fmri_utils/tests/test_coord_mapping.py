@@ -38,16 +38,16 @@ def test_optimize_map_vol():
     #vol1_affine = img.affine
 
     # add an intentionally rotated volume by X, Y, Z
-    X = x_rotmat(0.5)
+    X = x_rotmat(0.04)
     #- * radians around the y axis, then
-    Y = y_rotmat(0.07)
+    Y = y_rotmat(0.01)
     #- * radians around the z axis.
-    Z = z_rotmat(-0.3)
-    rotations = np.array([0.5, 0.07, -0.3])
+    Z = z_rotmat(-0.03)
+    rotations = np.array([0.04, 0.01, -0.03])
     #- Mutiply matrices together to get matrix describing all 3 rotations
     M = Z.dot(Y.dot(X))
 
-    translations = np.array([-1.,-3.,-2])
+    translations = np.array([-1.,-0.7,0.4])
     test_params = np.append(translations, rotations)
 
     transformed_vol1 = snd.affine_transform(vol1, M, translations, order = 1)
@@ -56,6 +56,6 @@ def test_optimize_map_vol():
     #  indeed captures a very similar volume between the transformed and original
 
     resampled_vol1, best_params = optimize_map_vol(vol1, transformed_vol1, img.affine)
-    assert_almost_equal(best_params, test_params, decimal = 4)
+    assert_almost_equal(best_params, test_params, decimal = 3)
 
     return

@@ -74,9 +74,14 @@ def apply_coord_mapping(RB_params, ref_vol, vol1, ref_vol_affine):
     i_vals, j_vals, k_vals = np.meshgrid(range(I), range(J), range(K), indexing='ij')
     in_vox_coords = np.array([i_vals, j_vals, k_vals])
 
-    ### Add SPM random noise algorithm here to coordinates !!
+    #create array of 3*(I,J,K) random numbers between -0.5 and 0.5
+    jitter = np.random.uniform(-0.5,0.5, 3*I*J*K)
+    # reshape to the same format as in_vox_coords
+    jitter = np.reshape(jitter, in_vox_coords.shape)
+    # add random noise to voxel coordinates
+    in_vox_coords_jittered = in_vox_coords + jitter
 
-    coords_last = in_vox_coords.transpose(1, 2, 3, 0)
+    coords_last = in_vox_coords_jittered.transpose(1, 2, 3, 0)
     vol1_vox_coords = nib.affines.apply_affine(moving_affine, coords_last)
     coords_first_again = vol1_vox_coords.transpose(3, 0, 1, 2)
     # Resample using map_coordinates
@@ -140,5 +145,6 @@ def optimize_map_vol(ref_vol, vol1, ref_vol_affine):
     RB_params_guess = [0, 0, 0, 0, 0, 0]
     best_params = fmin_powell(cost_at_xyz, RB_params_guess, args = (ref_vol, vol1, ref_vol_affine))
     optimized_vol1 = apply_coord_mapping(best_params, ref_vol, vol1, ref_vol_affine)
+    best_params = best_params*-1
 
     return optimized_vol1, best_params
