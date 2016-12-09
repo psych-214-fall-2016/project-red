@@ -61,3 +61,10 @@ Picture of how code flows together. [Insert here]
 * 
 
 
+## Discussion *make this sound better*
+* motivation: in order to avoid using preprocessing without understanding what is happening, we want to investigate a few (main? most common?) steps from a standard preprocessing pipeline
+* limitations: time, our understanding/ability
+* take-aways: implementing code helped us understand what happened (better than hand-waving/intuition) & standard packages do something more complicated than the basic idea
+* for future: important to inspect analysis stages, not just accept final result
+
+
