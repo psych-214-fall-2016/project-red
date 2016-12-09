@@ -26,6 +26,7 @@ from os.path import dirname, join as pjoin
 # import translations and rotation optimization functions
 from fmri_utils.func_preproc.translations import optimize_trans_vol
 from fmri_utils.func_preproc.optimize_rotations import optimize_rot_vol, apply_rotations
+from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol
 
 
 
@@ -55,7 +56,8 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
     data = img.get_data()
 
     # Dropping volumes, specified by input of drop_vols
-    data = data[...,drop_vols:]
+    #data = data[...,drop_vols:]
+    #data = data[...,:10] # for testing purposes
     n_vols = data.shape[-1]
 
 
@@ -74,23 +76,25 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
     realigned_data = np.zeros((data.shape))
     for i in range(n_vols):
         # use translation and rotation functions for each volume to the reference
-        translated_vol, trans_params = optimize_trans_vol(ref_vol, data[...,i])
-        rotated_vol, rot_params = optimize_rot_vol(ref_vol, data[...,i])
+        #translated_vol, trans_params = optimize_trans_vol(ref_vol, data[...,i])
+        #rotated_vol, rot_params = optimize_rot_vol(ref_vol, data[...,i])
         # or use translated_vol, I'm not sure...
 
-        translated_rotated_vol = apply_rotations(translated_vol, rot_params)
+        #translated_rotated_vol = apply_rotations(translated_vol, rot_params)
+
+        resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine)
 
         # add 6 rigid body parameters to array
-        params = np.append(trans_params, rot_params)
-        realign_params[i,:] = params
+        #params = np.append(trans_params, rot_params)
+        realign_params[i,:] = best_params
 
         # save new realigned vol in new 4d realigned data array
-        realigned_data[...,i] = translated_rotated_vol
+        realigned_data[...,i] = resampled_vol
 
         print('Realigned volume:', i)
     # save realigned img with the prefix to the same directory as the input img
     realigned_img = nib.Nifti1Image(data, img.affine)
-    nib.save(realigned_img, pjoin(img_dir, prefix + '_smooth_test_' + img_name))
+    nib.save(realigned_img, pjoin(img_dir, prefix + '_map_coords_' + img_name))
 
     return realigned_img, realign_params
 
@@ -114,7 +118,9 @@ def plot_realignment_parameters(rp, mm = True, degrees = True):
     axarr[1].plot(x, rp_adj[:,4], color = 'g')
     axarr[1].plot(x, rp_adj[:,5], color = 'r')
     axarr[1].set_ylabel('rotation parameters (degrees)')
+    axarr[1].set_xlabel('volums')
     plt.show()
+    plt.savefig('rp_map_coords_sub-10159_task-rest_bold', dpi = 200)
 
     return
 
@@ -128,3 +134,4 @@ img_path = pjoin(project_dir, 'data', img_filename)
 
 realigned_img, rp = volume_4D_realign(img_path)
 plot_realignment_parameters(rp)
+np.savetxt('rp_map_coords_sub-10159_task-rest_bold.txt', rp)
