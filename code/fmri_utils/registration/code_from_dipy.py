@@ -13,26 +13,26 @@ import nibabel as nib
 #resample (dipy); from static and moving, produce new affine
 
 
-#subject_10159_anat = nib.load('anat/sub-10159_T1w.nii.gz')
-#subject_10159_func = nib.load('func/sub-10159_task-rest_bold.nii.gz')
-#
-# static = subject_10159_anat.get_data()
-# static_grid2world = subject_10159_anat.get_affine()
-#
-#
-# moving = np.squeeze(subject_10159_func.get_data()[...,0])
-# moving_grid2world = subject_10159_func.get_affine()
-#
-#
-# nbins = 32
-# sampling_prop = None
-# metric = MutualInformationMetric(nbins, sampling_prop)
-#
-# level_iters = [10000,1000,100]
-#
-# sigmas = [3.0,1.0,0.0]
-#
-# factors = [4,2,1]
+subject_10159_anat = nib.load('anat/sub-10159_T1w.nii.gz')
+subject_10159_func = nib.load('func/sub-10159_task-rest_bold.nii.gz')
+
+static = subject_10159_anat.get_data()
+static_grid2world = subject_10159_anat.get_affine()
+
+
+moving = np.squeeze(subject_10159_func.get_data()[...,0])
+moving_grid2world = subject_10159_func.get_affine()
+
+
+nbins = 32
+sampling_prop = None
+metric = MutualInformationMetric(nbins, sampling_prop)
+
+level_iters = [10000,1000,100]
+
+sigmas = [3.0,1.0,0.0]
+
+factors = [4,2,1]
 
 """
 basic_resample:
@@ -48,7 +48,7 @@ resampled (the moving data sampled into the static NIFTI's coordinates)
 
 """
 
-def basic_resample(static, moving, static_grid2world, moving_grid2world):
+def basic_resample(static, moving):
 
     identity = np.eye(4)
     affine_map = AffineMap(identity, static.shape, static_grid2world, moving.shape, moving_grid2world)
@@ -76,14 +76,10 @@ outputs
  transformed: resampled nifti data
 """
 
-def com_transform(static,moving, static_grid2world, moving_grid2world):
+def com_transform(static,moving, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
 
     c_of_mass = transform_centers_of_mass(static, static_grid2world,
                                           moving, moving_grid2world)
-
-    return c_of_mass
-
-def translation_transform(static,moving, static_grid2world, moving_grid2world, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
 
     nbins = 32
     sampling_prop = None
@@ -99,10 +95,12 @@ def translation_transform(static,moving, static_grid2world, moving_grid2world, n
 
     transform = TranslationTransform3D()
     params0 = None
+    starting_affine = c_of_mass.affine
 
     translation = affreg.optimize(static,moving,transform,params0, static_grid2world, moving_grid2world, starting_affine=starting_affine)
+    transformed = translation.transform(moving)
 
-    return translation
+    return transformed
 
 """
 rigid_transform:
@@ -125,18 +123,16 @@ outputs
 """
 
 
-def rigid_transform(static, moving, static_grid2world, moving_grid2world, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
+def rigid_transform(static, moving, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
 
     transform = RigidTransform3D()
     params0 = None
-    affreg = AffineRegistration(metric=metric, level_iters=level_iters,sigmas=sigmas,factors=factors)
-
+    starting_affine = translation.affine
     rigid = affreg.optimize(static, moving, transform, params0,
                             static_grid2world, moving_grid2world,
                             starting_affine=starting_affine)
 
-    return rigid
-
+    transformed = rigid.transform(moving)
 
 """
 affine_transform:
@@ -159,14 +155,13 @@ outputs
 """
 
 
-def affine_transform(static, moving, static_grid2world, moving_grid2world, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
+def affine_transform(static, moving, nbins, sampling_prop, metric, level_iters, sigmas, factors, starting_affine):
 
     transform = AffineTransform3D()
     params0 = None
-    affreg = AffineRegistration(metric=metric, level_iters=level_iters,sigmas=sigmas,factors=factors)
-
+    starting_affine = rigid.affine
     affine = affreg.optimize(static, moving, transform, params0,
                              static_grid2world, moving_grid2world,
                              starting_affine=starting_affine)
 
-    return affine
+    transformed = affine.transform(moving)

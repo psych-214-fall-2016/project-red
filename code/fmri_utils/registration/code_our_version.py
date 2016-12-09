@@ -184,10 +184,10 @@ def transform_rigid(static_data, moving_data, static_affine, moving_affine, star
     params0 = translations0
 
     # get best translations
-    if partial in ["translations"]:
+    if partial in ["all", "translations"]:
         best_translations = fmin_powell(MI_cost, params0[:3], args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
         params1 = list(best_translations)
-    elif partial in ["all","rotations"]:
+    elif partial in ["rotations"]:
         params1 = params0
 
     params1 = params1 + rotations0
@@ -252,7 +252,7 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
 
     # get best scales
     if partial in ["all"]:
-        params1 = params0
+        params1 = list(fmin_powell(MI_cost, params0, args = (partial, [], static_data, moving_data, static_affine, moving_affine), maxiter = iter))
     elif partial in ["scales"]:
         best_scales = fmin_powell(MI_cost, scales0, args = (partial, params0[:6], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
         params1 = params0[:6] + list(best_scales)
@@ -360,7 +360,7 @@ def params2affine(params):
     return affine
 
 
-
+'''
 
 def pyramid(static_data, moving_data, static_affine, moving_affine, transformation, level_iters, sigmas, factors):
     """ apply transformation optimization using multiple levels (gaussian pyramid)
@@ -398,13 +398,4 @@ def pyramid(static_data, moving_data, static_affine, moving_affine, transformati
     """
 
     assert(len(level_iters)==len(sigmas) & len(level_iters)==len(factors))
-    nlevels = len(level_iters)
-
-    static_shape = np.array(static_data.shape)
-
-    for i in range(nlevels):
-        print('working on level 1')
-        static_resize_empty = np.zeros(static_shape/factors[i])
-        static_resize_affine = nib.affine.from_matvec(np.eye(3)*factors[i], [0,0,0])
-
-        static_resize_data = resample(static_resize_empty, static_data, np.eye(4), static_resize_affine)
+'''
