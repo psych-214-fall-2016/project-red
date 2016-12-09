@@ -39,6 +39,11 @@ Picture of how code flows together. [Insert here]
 ### Data
 
 * We'll give you the data in person. It's from the Internet [insert link]
+* for our specific data, the files can be found under the data directory. 
+* the path to anatomical data is /data/ds000030/sub-#####/anat
+* the path to functional data is /data/ds000030/sub-#####/func
+* the path to anatomical results is /data/ds000030/sub-#####/anatomical_results
+* 
 
 ### Validate
 * `validate_data.py`: validate data hashes 
