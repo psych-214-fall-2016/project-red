@@ -82,7 +82,13 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
 
         #translated_rotated_vol = apply_rotations(translated_vol, rot_params)
 
-        resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine)
+        # if this is after the first volume, use the previous volume's realignment
+        #  parameters as a starting point guess
+        if i > 0:
+            guess_params = realign_params[i-1,:]
+        else:
+            guess_params = np.zeros(6)
+        resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine, guess_params)
 
         # add 6 rigid body parameters to array
         #params = np.append(trans_params, rot_params)
@@ -118,9 +124,9 @@ def plot_realignment_parameters(rp, mm = True, degrees = True):
     axarr[1].plot(x, rp_adj[:,4], color = 'g')
     axarr[1].plot(x, rp_adj[:,5], color = 'r')
     axarr[1].set_ylabel('rotation parameters (degrees)')
-    axarr[1].set_xlabel('volums')
+    axarr[1].set_xlabel('volumes')
     plt.show()
-    plt.savefig('rp_map_coords_sub-10159_task-rest_bold', dpi = 200)
+    plt.savefig('rp_map_coords_sub-10159_task-rest_bold.png', dpi = 200)
 
     return
 
@@ -134,4 +140,4 @@ img_path = pjoin(project_dir, 'data', img_filename)
 
 realigned_img, rp = volume_4D_realign(img_path)
 plot_realignment_parameters(rp)
-np.savetxt('rp_map_coords_sub-10159_task-rest_bold.txt', rp)
+np.savetxt('rp_map_coords_prevolguess_sub-10159_task-rest_bold.txt', rp)

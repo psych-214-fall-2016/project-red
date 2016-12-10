@@ -119,7 +119,7 @@ def cost_at_xyz(RB_params, ref_vol, vol1, ref_vol_affine):
     return correl_mismatch(resampled_vol, ref_vol)
 
 # Optimization function to obtain best motion parameters and shifted volume
-def optimize_map_vol(ref_vol, vol1, ref_vol_affine):
+def optimize_map_vol(ref_vol, vol1, ref_vol_affine, guess_params = np.array([0,0,0,0,0,0])):
     """ Optimize the transofmation of vol1 to best match ref_vol
 
         Parameters
@@ -133,6 +133,10 @@ def optimize_map_vol(ref_vol, vol1, ref_vol_affine):
         ref_vol_affine: array shape (4, 4)
             image affine mapping for the reference volume
 
+        guess_params: array shape (6,)
+            buest guess parameters (3 translations, 3 rotations) for volume realignment
+
+
         Returns
         -------
         optimized_vol1: array shape (I, J, K)
@@ -142,8 +146,8 @@ def optimize_map_vol(ref_vol, vol1, ref_vol_affine):
             array of 3 translations and rotations to best match vol1 to reference
     """
     # best guess for rigid body transformations (3 translations, 3 rotations) - starting with 0
-    RB_params_guess = [0, 0, 0, 0, 0, 0]
-    best_params = fmin_powell(cost_at_xyz, RB_params_guess, args = (ref_vol, vol1, ref_vol_affine))
+    #RB_params_guess = [0, 0, 0, 0, 0, 0]
+    best_params = fmin_powell(cost_at_xyz, guess_params, args = (ref_vol, vol1, ref_vol_affine))
     optimized_vol1 = apply_coord_mapping(best_params, ref_vol, vol1, ref_vol_affine)
     best_params = best_params*-1
 
