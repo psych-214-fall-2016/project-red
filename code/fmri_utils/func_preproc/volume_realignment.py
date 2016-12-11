@@ -140,4 +140,4 @@ img_path = pjoin(project_dir, 'data', img_filename)
 
 realigned_img, rp = volume_4D_realign(img_path)
 plot_realignment_parameters(rp)
-np.savetxt('rp_map_coords_prevolguess_sub-10159_task-rest_bold.txt', rp)
+np.savetxt('rp_map_coords_sub-10159_task-rest_bold.txt', rp)

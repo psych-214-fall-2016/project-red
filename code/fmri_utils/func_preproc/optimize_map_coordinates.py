@@ -74,13 +74,17 @@ def apply_coord_mapping(RB_params, ref_vol, vol1, ref_vol_affine):
     i_vals, j_vals, k_vals = np.meshgrid(range(I), range(J), range(K), indexing='ij')
     in_vox_coords = np.array([i_vals, j_vals, k_vals])
 
+    np.random.seed(1500)
     #create array of 3*(I,J,K) random numbers between -0.5 and 0.5
-    jitter = np.random.uniform(-0.5,0.5, 3*I*J*K)
+    jitter = np.random.uniform(-0.1,0.1, 3*I*J*K)
     # reshape to the same format as in_vox_coords
     jitter = np.reshape(jitter, in_vox_coords.shape)
     # add random noise to voxel coordinates
     in_vox_coords_jittered = in_vox_coords + jitter
 
+    # no jitter:
+    #coords_last = in_vox_coords.transpose(1, 2, 3, 0)
+    # with jitter:
     coords_last = in_vox_coords_jittered.transpose(1, 2, 3, 0)
     vol1_vox_coords = nib.affines.apply_affine(moving_affine, coords_last)
     coords_first_again = vol1_vox_coords.transpose(3, 0, 1, 2)
@@ -134,7 +138,7 @@ def optimize_map_vol(ref_vol, vol1, ref_vol_affine, guess_params = np.array([0,0
             image affine mapping for the reference volume
 
         guess_params: array shape (6,)
-            buest guess parameters (3 translations, 3 rotations) for volume realignment
+            buest guess parameters (3 translations, 3 rotations) for volume realignment, default is 0s
 
 
         Returns
