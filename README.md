@@ -1,4 +1,4 @@
-# Project Red - Preprocessing in the 21st Century: A Musical Extravaganza
+# Preprocessing in the 21st Century: A Musical Extravaganza (Project Red)
 
 Fall 2016 final project for PSY 214. In order to avoid using preprocessing without understanding what is happening, we  investigated a few main steps from a standard preprocessing pipeline. We attempted to implement anatomical preprocessing, functional preprocessing, segmentation, and registration. 
 
@@ -55,7 +55,7 @@ Picture of how code flows together. [Insert here]
 
 ### Data
 
-* We'll give you the data in person or you can download it [here] (https://openfmri.org/dataset/ds000030/). It's from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. 
+* We'll give you the data in person or you can download it [here](https://openfmri.org/dataset/ds000030/). It's from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. 
 * Data files can be found under the data directory. 
     * Path to anatomical data: /data/ds000030/sub-#####/anat
     * Path to functional data: /data/ds000030/sub-#####/func
@@ -85,8 +85,8 @@ Picture of how code flows together. [Insert here]
 * for future: important to inspect analysis stages, not just accept final result
 
 ## Authors
-* **Chris Muse-Fisher** ([cmusefish]) (https://github.com/cmusefish)
-* **Christine Tseng** ([ctseng12]) (https://github.com/ctseng12)
-* **Jacob Miller** ([jcbmiller94]) (https://github.com/jcbmiller94)
-* **Michael Nagle** ([mpnagle]) (https://github.com/mpnagle)
-* **Zuzanna Balewski** ([zzbalews]) (https://github.com/zzbalews)
+* **Chris Muse-Fisher** ([cmusefish](https://github.com/cmusefish))
+* **Christine Tseng** ([ctseng12](https://github.com/ctseng12))
+* **Jacob Miller** ([jcbmiller94](https://github.com/jcbmiller94))
+* **Michael Nagle** ([mpnagle](https://github.com/mpnagle))
+* **Zuzanna Balewski** ([zzbalews](https://github.com/zzbalews))
