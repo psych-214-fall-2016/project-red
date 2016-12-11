@@ -100,3 +100,4 @@ Although we'd hoped to implement each step fully, most were implemented as simpl
 * **Jacob Miller** ([jcbmiller94](https://github.com/jcbmiller94))
 * **Michael Nagle** ([mpnagle](https://github.com/mpnagle))
 * **Zuzanna Balewski** ([zzbalews](https://github.com/zzbalews))
+* **Dan Lurie (mentor)** ([danlurie](https://github.com/danlurie))
