@@ -20,13 +20,35 @@ pip3 install --user -r requirements.txt
 
 ### Installing
 
-After cloning the repository, put code/fmri_utils onto Python path using setup.py: 
+After cloning the repository, put `code/fmri_utils` onto your Python path using setup.py: 
 
 ```
 pip3 install --user --editable ./code
 ```
 
-## Running Tests
+### Getting the Data
+
+The data is from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. We can give it to you in person or you can download it [here](https://openfmri.org/dataset/ds000030/). 
+
+Put data files in the data directory so that the paths are in the following format:
+
+* Path to anatomical data: `/data/ds000030/sub-#####/anat`
+* Path to functional data: `/data/ds000030/sub-#####/func`
+* Path to anatomical results: `/data/ds000030/sub-#####/anatomical_results`
+
+
+## Testing/Validation
+
+### Validate data
+Check the integrity of your data by running
+
+```
+python3 /code/fmri_utils/data_hashes.py data
+``` 
+
+This compares generated hashes for the data you downloaded with hashes in `/data/data_hashes.txt`.
+
+### Running tests
 To run tests, you should have pytest installed. Install pytest by running
 
  ```
@@ -47,22 +69,11 @@ py.test code
 
 where ```code``` is the name of the test you want to run.    
 
-Tests are located in: /code/fmri_utils/tests
+Tests are located in: `/code/fmri_utils/tests`
 
 ## Roadmap 
 
 Picture of how code flows together. [Insert here]
-
-### Data
-
-* We'll give you the data in person or you can download it [here](https://openfmri.org/dataset/ds000030/). It's from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. 
-* Data files can be found under the data directory. 
-    * Path to anatomical data: /data/ds000030/sub-#####/anat
-    * Path to functional data: /data/ds000030/sub-#####/func
-    * Path to anatomical results: /data/ds000030/sub-#####/anatomical_results
-
-### Validate
-* `validate_data.py`: validate data hashes 
 
 ### Anatomical preprocessing
 * `some code`: de-oblique, skull strip, etc. 
@@ -72,17 +83,16 @@ Picture of how code flows together. [Insert here]
 * `volume_realign.py`: realigns volumes in a 4D .nii file
 
 ### Segmentation
-* `kmeans.py`: does kmeans on the pixel intensity histogram to cluster pixels
-* `mrf_em.py`: does Markov Random Field Expectation-Maximization segmentation (used in FSL FAST) 
+Segmentation takes the output of anatomical preprocessing and computes the probability that each voxel is white matter, gray matter, and csf. It summarizes those probabilities in three probability maps - one for each tissue class. Here, we tried to generate the probability maps using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST. Both methods are currently only implemented to run on brain slices. 
+
+* `kmeans.py`: does k-means on the pixel intensity histogram (< 30 s)
+* `mrf_em.py`: does MRF-EM segmentation (used in FSL FAST) (~ 6 min for a 20x20 pixel slice of brain)
 
 ### Registration
-* 
 
 
-## Discussion *make this sound better*
-* limitations: time, our understanding/ability
-* take-aways: implementing code helped us understand what happened (better than hand-waving/intuition) & standard packages do something more complicated than the basic idea
-* for future: important to inspect analysis stages, not just accept final result
+## Discussion
+Although we'd hoped to implement each step fully, most were implemented as simpler versions of the corresponding steps in standard preprocessing pipelines. We were mainly limited by time and prior understanding/experience with coding and preprocessing. However, writing and testing code from scratch gave us a much better understanding of what the pipelines do,  and it underscored the complexity of these steps beyond the basic hand-wavy/intuitive ideas. Our main takeaway is that it's important to inspect analysis stages and not just accept final results. 
 
 ## Authors
 * **Chris Muse-Fisher** ([cmusefish](https://github.com/cmusefish))
