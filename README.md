@@ -30,7 +30,7 @@ pip3 install --user --editable ./code
 
 The data is from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. We can give it to you in person or you can download it [here](https://openfmri.org/dataset/ds000030/). 
 
-Put data files in the data directory so that the necessary paths are found in these paths:
+Put data files in the data directory so that the necessary files are found in these paths:
 
 * Path to anatomical data: `/data/ds000030/sub-#####/anat/sub-#####_T1w.nii.gz`
 * Path to functional data: `/data/ds000030/sub-#####/func/sub-#####_task-rest_bold.nii.gz`
