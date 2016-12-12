@@ -30,12 +30,16 @@ pip3 install --user --editable ./code
 
 The data is from the UCLA Consortium for Neuropsychiatric Phenomics LA5c Study. We can give it to you in person or you can download it [here](https://openfmri.org/dataset/ds000030/). 
 
-Put data files in the data directory so that the paths are in the following format:
+Put data files in the data directory so that the necessary paths are found in these paths:
 
-* Path to anatomical data: `/data/ds000030/sub-#####/anat`
-* Path to functional data: `/data/ds000030/sub-#####/func`
+* Path to anatomical data: `/data/ds000030/sub-#####/anat/sub-#####_T1w.nii.gz`
+* Path to functional data: `/data/ds000030/sub-#####/func/sub-#####_task-rest_bold.nii.gz`
 
-Scripts will generate outputs in the following format:
+You will also need the MNI template file. You can download it [here](https://bic-berkeley.github.io/psych-214-fall-2016/_downloads/mni_icbm152_t1_tal_nlin_asym_09a.nii). 
+
+Put the MNI template in the data directory: `/data/mni_icbm152_t1_tal_nlin_asym_09a.nii`.
+
+Scripts in this package will create these directories (if they do not already exist) for generated files:
 
 * Path to anatomical preprocessing results: `/data/ds000030/sub-#####/anatomical_results`
 * Path to functional preprocessing results: `/data/ds000030/sub-#####/functional_results`
