@@ -34,7 +34,13 @@ Put data files in the data directory so that the paths are in the following form
 
 * Path to anatomical data: `/data/ds000030/sub-#####/anat`
 * Path to functional data: `/data/ds000030/sub-#####/func`
-* Path to anatomical results: `/data/ds000030/sub-#####/anatomical_results`
+
+Scripts will generate outputs in the following format:
+
+* Path to anatomical preprocessing results: `/data/ds000030/sub-#####/anatomical_results`
+* Path to functional preprocessing results: `/data/ds000030/sub-#####/functional_results`
+* Path to segmentation results: `/data/ds000030/sub-#####/segmentation_results`
+* Path to anatomical registration results: `/data/ds000030/sub-#####/registration_results`
 
 
 ## Testing/Validation
