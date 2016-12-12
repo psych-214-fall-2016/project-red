@@ -251,12 +251,10 @@ def transform_affine(static_data, moving_data, static_affine, moving_affine, sta
     params0 = translations0 + rotations0 + scales0
 
     # get best scales
-    if partial in ["all"]:
-        params1 = params0
-    elif partial in ["scales"]:
+    if partial in ["scales"]:
         best_scales = fmin_powell(MI_cost, scales0, args = (partial, params0[:6], static_data, moving_data, static_affine, moving_affine), maxiter = iter)
         params1 = params0[:6] + list(best_scales)
-    elif partial in ["shears"]:
+    elif partial in ["all", "shears"]:
         params1 = params0
 
     params1 = params1 + shears0
