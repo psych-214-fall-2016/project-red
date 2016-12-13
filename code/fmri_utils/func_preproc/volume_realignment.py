@@ -26,7 +26,7 @@ from os.path import dirname, join as pjoin
 # import translations and rotation optimization functions
 from fmri_utils.func_preproc.translations import optimize_trans_vol
 from fmri_utils.func_preproc.optimize_rotations import optimize_rot_vol, apply_rotations
-from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol
+from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol, apply_coord_mapping
 
 
 
@@ -51,7 +51,8 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
     # smooth image, if designated
     if smooth_fwhm > 0:
         fwhm = smooth_fwhm
-        img = proc.smooth_image(img, 5)
+        img_smooth = proc.smooth_image(img, fwhm)
+        data_smooth = img.get_data()
 
     data = img.get_data()
 
@@ -88,7 +89,13 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
             guess_params = realign_params[i-1,:]
         else:
             guess_params = np.zeros(6)
-        resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine, guess_params)
+
+        # testing out getting parameters from smoothed data
+        best_params = optimize_map_vol(ref_vol, data_smooth[...,i], img_smooth.affine, guess_params)
+
+        # resampling non-smoothed data using params determined above with smoothed data
+        # resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine, guess_params)
+        resampled_vol = apply_coord_mapping(best_params, ref_vol, data[...,i], img.affine)
 
         # add 6 rigid body parameters to array
         #params = np.append(trans_params, rot_params)
@@ -126,7 +133,7 @@ def plot_realignment_parameters(rp, mm = True, degrees = True):
     axarr[1].set_ylabel('rotation parameters (degrees)')
     axarr[1].set_xlabel('volumes')
     plt.show()
-    plt.savefig('rp_map_coords_sub-10159_task-rest_bold.png', dpi = 200)
+    plt.savefig('rp_map_coords_smooth5mm_sub-10159_task-rest_bold.png', dpi = 200)
 
     return
 
@@ -138,6 +145,6 @@ code_dir = dirname(utils_dir)
 project_dir = dirname(code_dir)
 img_path = pjoin(project_dir, 'data', img_filename)
 
-realigned_img, rp = volume_4D_realign(img_path)
+realigned_img, rp = volume_4D_realign(img_path, smooth_fwhm = 5)
 plot_realignment_parameters(rp)
-np.savetxt('rp_map_coords_sub-10159_task-rest_bold.txt', rp)
+np.savetxt('rp_map_coords_smooth5mm_sub-10159_task-rest_bold.txt', rp)

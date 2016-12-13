@@ -152,7 +152,8 @@ def optimize_map_vol(ref_vol, vol1, ref_vol_affine, guess_params = np.array([0,0
     # best guess for rigid body transformations (3 translations, 3 rotations) - starting with 0
     #RB_params_guess = [0, 0, 0, 0, 0, 0]
     best_params = fmin_powell(cost_at_xyz, guess_params, args = (ref_vol, vol1, ref_vol_affine))
-    optimized_vol1 = apply_coord_mapping(best_params, ref_vol, vol1, ref_vol_affine)
+    # optimized_vol1 = apply_coord_mapping(best_params, ref_vol, vol1, ref_vol_affine)
     best_params = best_params*-1
 
-    return optimized_vol1, best_params
+    #return optimized_vol1, best_params
+    return best_params 

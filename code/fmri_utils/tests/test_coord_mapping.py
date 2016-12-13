@@ -55,7 +55,8 @@ def test_optimize_map_vol():
     # test to see whether to optimization of resampling function
     #  indeed captures a very similar volume between the transformed and original
 
-    resampled_vol1, best_params = optimize_map_vol(vol1, transformed_vol1, img.affine)
+    #resampled_vol1, best_params = optimize_map_vol(vol1, transformed_vol1, img.affine)
+    best_params = optimize_map_vol(vol1, transformed_vol1, img.affine)
     assert_almost_equal(best_params, test_params, decimal = 3)
 
     return
