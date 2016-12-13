@@ -132,7 +132,6 @@ def validate_data(data_directory, hash_file):
 
     # Calculate actual hash for given filename.
     for line in split_lines:
-
         fhash = file_hash(pjoin(data_directory,line[1]))
 
         # If hash for filename is not the same as the one in the file, raise
