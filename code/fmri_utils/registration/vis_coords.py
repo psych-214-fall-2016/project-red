@@ -4,17 +4,6 @@ import nibabel as nib
 import numpy as np
 import numpy.linalg as npl
 
-above_project_red= '/Users/Zuzanna/Documents/Berkeley/classes/PSYCH214_fMRI/project/'
-
-coord_file = open('coordinate_info.csv','r')
-coord_info = [line for line in csv.reader(coord_file)][1:]
-
-plt.rcParams['image.cmap'] = 'gray'
-plt.rcParams['image.interpolation'] = 'nearest'
-
-
-MNI_row = [i for i in range(len(coord_info)) if 'MNI' in coord_info[i]]
-subject_rows = [i for i in range(len(coord_info)) if 'MNI' not in coord_info[i]]
 
 def show_slices(coord_line, zoom):
 
@@ -73,11 +62,28 @@ def str_to_list(txt):
     clean = txt.replace('[','').replace(']','')
     return [float(i) for i in clean.split(', ')]
 
-MNI_fig = show_slices(coord_info[MNI_row[0]],1)
-MNI_fig.savefig('MNI_fig.png')
-MNI_fig.show()
 
-for s in range(len(subject_rows)):
-    subj_fig = show_slices(coord_info[subject_rows[s]],1)
-    subj_fig.savefig(coord_info[subject_rows[s]][1]+'.png')
-    subj_fig.show()
+def main():
+    above_project_red= '/Users/Zuzanna/Documents/Berkeley/classes/PSYCH214_fMRI/project/'
+
+    coord_file = open('coordinate_info.csv','r')
+    coord_info = [line for line in csv.reader(coord_file)][1:]
+
+    plt.rcParams['image.cmap'] = 'gray'
+    plt.rcParams['image.interpolation'] = 'nearest'
+
+
+    MNI_row = [i for i in range(len(coord_info)) if 'MNI' in coord_info[i]]
+    subject_rows = [i for i in range(len(coord_info)) if 'MNI' not in coord_info[i]]
+
+    MNI_fig = show_slices(coord_info[MNI_row[0]],1)
+    MNI_fig.savefig('MNI_fig.png')
+    MNI_fig.show()
+
+    for s in range(len(subject_rows)):
+        subj_fig = show_slices(coord_info[subject_rows[s]],1)
+        subj_fig.savefig(coord_info[subject_rows[s]][1]+'.png')
+        subj_fig.show()
+
+if __name__ == '__main__':
+    main()

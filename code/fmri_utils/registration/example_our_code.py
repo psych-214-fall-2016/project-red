@@ -1,4 +1,5 @@
 from os.path import dirname, join as pjoin
+import sys
 
 import nibabel as nib
 import numpy as np
@@ -12,11 +13,94 @@ from scipy.ndimage import affine_transform
 from fmri_utils.registration.shared import get_data_affine, decompose_rot_mat
 from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid, transform_affine
 
+def do_example(mni_filename, SUBJ, SCALE, from_saved, input_dir, output_dir):
+    print('Working on: '+SUBJ)
 
-def save_outputs(subject, data, static_affine, transform_affine, section, output_dir):
+    if from_saved:
+        print('... skipping optimizations; using existing *_backup.txt files\n')
+    else:
+        print('... running all optimization steps\n')
+
+
+    # load data
+    print('MNI template: '+mni_filename)
+    if from_saved:
+        subj_filename = pjoin(input_dir,SUBJ+'_T1w_brain.nii.gz')
+    else:
+        subj_filename = pjoin(input_dir,SUBJ+'_T1w_skull_stripped.nii.gz')
+    print('SUBJ file: '+subj_filename)
+
+    static, moving, static_affine, moving_affine = get_rescaled_data(mni_filename, subj_filename, SCALE)
+
+    # resample into template space
+    print('--- working on *resampled*')
+    if from_saved:
+        resample_affine = load_affine(pjoin(input_dir,SUBJ+'_T1w_brain_resampled_backup.txt'))
+    else:
+        resample_affine = np.eye(4)
+    updated_moving_affine = resample_affine.dot(moving_affine)
+
+    resampled = resample(static, moving, static_affine, updated_moving_affine)
+    save_outputs(SUBJ, resampled, static_affine, resample_affine, 'resampled', output_dir, static)
+
+    # center of mass transform
+    print('--- working on *cmass*')
+    if from_saved:
+        cmass_affine = load_affine(pjoin(input_dir,SUBJ+'_T1w_brain_cmass_backup.txt'))
+    else:
+        cmass_affine = transform_cmass(static, moving, static_affine, moving_affine)
+    updated_moving_affine = cmass_affine.dot(moving_affine)
+
+    cmass = resample(static, moving, static_affine, updated_moving_affine)
+    save_outputs(SUBJ, cmass, static_affine, cmass_affine, 'cmass', output_dir, static)
+
+
+    ## rigid: translation only
+    print('--- working on *translation*')
+    if from_saved:
+        translation_affine = load_affine(pjoin(input_dir,SUBJ+'_T1w_brain_translation_backup.txt'))
+    else:
+        translation_affine = transform_rigid(static, moving, static_affine, moving_affine, cmass_affine, 10, "translations")
+    updated_moving_affine = translation_affine.dot(moving_affine)
+
+    translation = resample(static, moving, static_affine, updated_moving_affine)
+    save_outputs(SUBJ, translation, static_affine, translation_affine, 'translation', output_dir, static)
+
+    ## rigid: translation and rotation
+    print('--- working on *rigid*')
+    if from_saved:
+        rigid_affine = load_affine(pjoin(input_dir,SUBJ+'_T1w_brain_rigid_backup.txt'))
+    else:
+        rigid_affine = transform_rigid(static, moving, static_affine, moving_affine, translation_affine, 10, "all")
+    updated_moving_affine = rigid_affine.dot(moving_affine)
+
+    rigid = resample(static, moving, static_affine, updated_moving_affine)
+    save_outputs(SUBJ, rigid, static_affine, rigid_affine, 'rigid', output_dir, static)
+
+
+    ## affine: translation, rotation, scaling, and shearing
+    print('--- working on *sheared*')
+    if from_saved:
+        shearing_affine = load_affine(pjoin(input_dir,SUBJ+'_T1w_brain_sheared_backup.txt'))
+    else:
+        shearing_affine = transform_affine(static, moving, static_affine, moving_affine, rigid_affine, 10, "all")
+    updated_moving_affine = shearing_affine.dot(moving_affine)
+
+    sheared = resample(static, moving, static_affine, updated_moving_affine)
+    save_outputs(SUBJ, sheared, static_affine, shearing_affine, 'sheared', output_dir, static)
+
+
+def save_outputs(subject, data, static_affine, transform_affine, section, output_dir, static):
+    # save slice overlays
+    regtools.overlay_slices(static, data, None, 0, "Static", "Moving", output_dir+subject+"_"+section+"_0.png")
+    regtools.overlay_slices(static, data, None, 1, "Static", "Moving", output_dir+subject+"_"+section+"_1.png")
+    regtools.overlay_slices(static, data, None, 2, "Static", "Moving", output_dir+subject+"_"+section+"_2.png")
+
+    # save resampled *.nii.gz images
     img = nib.Nifti1Image(data, static_affine)
     nib.save(img, output_dir+subject+'_T1w_brain_'+section+'.nii.gz')
 
+    # save affines
     f = open(output_dir+subject+'_T1w_brain_'+section+'.txt', 'w')
     f.write(str(transform_affine))
     f.close()
@@ -26,7 +110,6 @@ def load_affine(file):
     affine_float = [[float(y) for y in row] for row in affine_str]
     affine = np.array(affine_float)
     return affine
-
 
 def get_rescaled_data(static_filename, moving_filename, SCALE):
     # load data
@@ -55,81 +138,37 @@ def get_rescaled_data(static_filename, moving_filename, SCALE):
     return static_scaled, moving_scaled, static_scaled_affine, moving_scaled_affine
 
 
-def do_example(mni_filename, subj_filename, SCALE):
-    ## load data
-    print('loading data...')
+def main():
+    errormsg = "Need to state if using saved results or rerunning optimizations. \
+    \nOptions:\n\
+    $ python3 example_our_code.py saved\n\
+    $ python3 example_our_code.py rerun"
 
-    static, moving, static_affine, moving_affine = get_rescaled_data(mni_filename, subj_filename, SCALE)
+    if len(sys.argv) < 2:
+        raise RuntimeError(errormsg)
 
-    img_path = '../../../data/ds000030/'+SUBJ+'/registration_results/'
-
-    ## resample into template space
-    print('working on resampled*.png')
-    resampled = resample(static, moving, static_affine, moving_affine)
-
-    regtools.overlay_slices(static, resampled, None, 0, "Static", "Moving", img_path+SUBJ+"_resampled_0.png")
-    regtools.overlay_slices(static, resampled, None, 1, "Static", "Moving", img_path+SUBJ+"_resampled_1.png")
-    regtools.overlay_slices(static, resampled, None, 2, "Static", "Moving", img_path+SUBJ+"_resampled_2.png")
-    save_outputs(SUBJ, resampled, static_affine, np.eye(4), 'resampled', img_path)
-
+    if sys.argv[1]=='saved':
+        from_saved = True
+    elif sys.argv[1]=='rerun':
+        from_saved = False
+    else:
+        raise RuntimeError(errormsg)
 
 
-    # center of mass transform
-    print('working on cmass*.png')
-    cmass_affine = transform_cmass(static, moving, static_affine, moving_affine)
-    # cmass_affine = load_affine(img_path+SUBJ+'_T1w_brain_cmass.txt')
-    updated_moving_affine = cmass_affine.dot(moving_affine)
-    cmass = resample(static, moving, static_affine, updated_moving_affine)
+    subjects = ['sub-10159', 'sub-10171', 'sub-10189', 'sub-10193', 'sub-10206', 'sub-10217', 'sub-10225']
+    SCALE = 1
 
-    regtools.overlay_slices(static, cmass, None, 0, "Static", "Moving", img_path+SUBJ+"_cmass_0.png")
-    regtools.overlay_slices(static, cmass, None, 1, "Static", "Moving", img_path+SUBJ+"_cmass_1.png")
-    regtools.overlay_slices(static, cmass, None, 2, "Static", "Moving", img_path+SUBJ+"_cmass_2.png")
-    save_outputs(SUBJ, cmass, static_affine, cmass_affine, 'cmass', img_path)
+    for SUBJ in subjects:
+        if from_saved:
+            mni_filename= '../../../data/registration_example_files/mni_icbm152_t1_tal_nlin_asym_09a_brain.nii.gz'
+            input_dir = pjoin('../../../data/registration_example_files')
+        else:
+            mni_filename= '../../../data/MNI_template/mni_icbm152_t1_tal_nlin_asym_09a_skull_stripped.nii.gz'
+            input_dir = pjoin('../../../data/ds000030',SUBJ,'anat')
 
+        output_dir = pjoin('../../../data/ds000030',SUBJ,'registration_results')
 
-    ## rigid: translation only
-    print('working on translation*.png')
-    translation_affine = transform_rigid(static, moving, static_affine, moving_affine, cmass_affine, 10, "translations")
-    # translation_affine = load_affine(img_path+SUBJ+'_T1w_brain_translation.txt')
-    updated_moving_affine = translation_affine.dot(moving_affine)
-    translation = resample(static, moving, static_affine, updated_moving_affine)
+        do_example(mni_filename, SUBJ, SCALE, from_saved, input_dir, output_dir) #reusing saved outputs
 
-    regtools.overlay_slices(static, translation, None, 0, "Static", "Moving", img_path+SUBJ+"_translation_0.png")
-    regtools.overlay_slices(static, translation, None, 1, "Static", "Moving", img_path+SUBJ+"_translation_1.png")
-    regtools.overlay_slices(static, translation, None, 2, "Static", "Moving", img_path+SUBJ+"_translation_2.png")
-    save_outputs(SUBJ, translation, static_affine, translation_affine, 'translation', img_path)
-
-    ## rigid: translation and rotation
-    print('working on rigid*.png')
-    rigid_affine = transform_rigid(static, moving, static_affine, moving_affine, translation_affine, 10, "all")
-    # rigid_affine = load_affine(img_path+SUBJ+'_T1w_brain_rigid.txt')
-    updated_moving_affine = rigid_affine.dot(moving_affine)
-    rigid = resample(static, moving, static_affine, updated_moving_affine, img_path)
-
-    regtools.overlay_slices(static, rigid, None, 0, "Static", "Moving", img_path+SUBJ+"_rigid_0.png")
-    regtools.overlay_slices(static, rigid, None, 1, "Static", "Moving", img_path+SUBJ+"_rigid_1.png")
-    regtools.overlay_slices(static, rigid, None, 2, "Static", "Moving", img_path+SUBJ+"_rigid_2.png")
-    save_outputs(SUBJ, rigid, static_affine, rigid_affine, 'rigid', img_path)
-
-
-    ## affine: translation, rotation, scaling, and shearing
-    print('working on sheared*.png')
-    shearing_affine = transform_affine(static, moving, static_affine, moving_affine, rigid_affine, 10, "all")
-    # shearing_affine = load_affine(img_path++SUBJ+'_T1w_brain_sheared.txt')
-    updated_moving_affine = shearing_affine.dot(moving_affine)
-    sheared = resample(static, moving, static_affine, updated_moving_affine)
-
-    regtools.overlay_slices(static, sheared, None, 0, "Static", "Moving", img_path+SUBJ+"_sheared_0.png")
-    regtools.overlay_slices(static, sheared, None, 1, "Static", "Moving", img_path+SUBJ+"_sheared_1.png")
-    regtools.overlay_slices(static, sheared, None, 2, "Static", "Moving", img_path+SUBJ+"_sheared_2.png")
-    save_outputs(SUBJ, sheared, static_affine, shearing_affine, 'sheared', img_path)
-
-
-
-
-SUBJ = 'sub-10171'
-SCALE = 1
-mni_filename= '../../../data/MNI_template/mni_icbm152_t1_tal_nlin_asym_09a_brain.nii.gz'
-subj_filename = '../../../data/ds000030/'+SUBJ+'/anat/'+SUBJ+'_T1w.nii.gz'
-
-do_example(mni_filename, subj_filename, SCALE)
+if __name__ == '__main__':
+    main()
