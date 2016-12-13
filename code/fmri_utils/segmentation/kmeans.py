@@ -53,7 +53,7 @@ def get_labels(x, centers):
 
     Output
     ------
-    labels : int array (n,)
+    labels : array (n,)
         Contains the cluster assignment for each pixel.
     """
     labels = np.zeros(x.shape)
@@ -72,7 +72,7 @@ def get_centers(x, labels, k):
     x : array (n,)
         Input data.
 
-    labels : int array (n,)
+    labels : array (n,)
         Contains the cluster assignment for each pixel.
 
     k : int
@@ -93,7 +93,7 @@ def get_centers(x, labels, k):
 def kmeans(x, k=3, max_iter=10^4, scale_max=50, scale_min=0,
            map_keys=['csf', 'gray', 'white']):
     """
-    Run kmeans for data x and probability maps for each cluster. 
+    Run kmeans for data x and probability maps for each cluster.
 
     Input
     -----
@@ -118,7 +118,7 @@ def kmeans(x, k=3, max_iter=10^4, scale_max=50, scale_min=0,
     centers : array (k,)
         Contains the updated means for each cluster.
 
-    labels : int array (n,)
+    labels : array (n,)
         Contains the cluster assignment for each pixel.
 
     maps : dict (k,)
