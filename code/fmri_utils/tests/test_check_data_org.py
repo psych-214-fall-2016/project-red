@@ -28,11 +28,11 @@ def test_safe_make_dir():
     os.rmdir(tempdir)
     assert(not os.path.isdir(tempdir)) # dir doesn't exist
 
-def test_hash_mni():
+def test_hash_sample():
 
     # test extraction and generation of hash for MNI template file
-    data_directory = pjoin(dirname(__file__),'../../../data/MNI_template')
-    hash_file = "data_hashes_MNI.txt"
+    data_directory = pjoin(dirname(__file__))
+    hash_file = "test_data_hashes.txt"
 
     # make sure file doesn't already exist
     assert(not os.path.exists(pjoin(data_directory, hash_file))) # dir doesn't exist
@@ -40,26 +40,26 @@ def test_hash_mni():
     # make hash file with existing file
     make_nii_hashes_nested(data_directory, hash_file)
 
-    # check that mni_icbm152_t1_tal_nlin_asym_09a.nii in hash_file
-    mni_file = 'mni_icbm152_t1_tal_nlin_asym_09a.nii'
+    # check that sample file is in hash_file
+    sample_file = 'ds107_sub012_t1r2_small.nii'
 
     fobj = open(pjoin(data_directory,hash_file), 'rt')
     lines = fobj.readlines()
     fobj.close()
     split_lines= [line.split() for line in lines]
-    mni_idx = [i for i in range(len(split_lines)) if split_lines[i][1].find(mni_file)>-1]
+    sample_idx = [i for i in range(len(split_lines)) if split_lines[i][1].find(sample_file)>-1]
 
-    assert(len(mni_idx)==1) # one row with correct file
+    assert(len(sample_idx)==1) # one row with correct file
 
-    # rewrite hash_file with only mni_file line
+    # rewrite hash_file with only sample_file line
 
     gobj = open(pjoin(data_directory,hash_file), 'wt')
-    gobj.write(" ".join(split_lines[mni_idx[0]]))
+    gobj.write(" ".join(split_lines[sample_idx[0]]))
     gobj.close()
 
     # Call function to validate data in data directory
     validate_data(data_directory, hash_file)
 
-    # remove mni hash_file
+    # remove sample hash_file
     os.remove(pjoin(data_directory,hash_file))
     assert(not os.path.exists(pjoin(data_directory,hash_file))) # dir doesn't exist
