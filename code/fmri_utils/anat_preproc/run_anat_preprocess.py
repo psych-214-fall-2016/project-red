@@ -1,57 +1,80 @@
 #got most of my guidance for this from the NIPYPE Beginners Guide
 
 import os
-from os.path import join as opj
+from os.path import dirname, join as pjoin
+import nibabel as nib
+import numpy as np
 from MNI_reorient import MNI_reorient
 from skull_strip import structural_skull_strip
-#from fmri_utils.registration.code_our_version import resample, transform_rigid
+from fmri_utils.registration.code_our_version import resample, transform_rigid
 
-#import deoblique
 
-print('Running Anatomical Preprocessing: Skull Strip, MNI Reorientation')
-#set up all of the directories
-ROOTDIR = '/Users/despolab/CMF_Files/'
-data_dir_id = 'data/ds000030/'
-subject_identifier = 'sub'
+
+print('Running Anatomical Preprocessing: MNI Reorient, Skull Strip, Deoblique')
+
+
+# set up the path name with the anatomical files
+ROOTDIR = dirname(__file__)
+ROOT_DATA_DIR = pjoin(ROOTDIR, '../../../data')
+this_study_dir_id = 'ds000030'
+
+this_study_template_id = 'MNI_template'
+
 anatomical_dir_id = 'anat'
+
+# this is an identifier that is consistent across all subjects. It is used
+# in order to get a list of all of the subjects
+subject_identifier = 'sub'
+
+# this is an identifier found on
 structural_identifier = '_T1w.nii.gz'
+
+# create a name for the anatomical results file
 results_dir_id = 'anatomical_results'
 
-#create names for output files
+# create root names for output files
 MNI_reorient_file_root = '_MNI_reorient'
-skull_strip_file_root = '_MNI_skull_strip'
+skull_strip_file_root = '_MNI_skull_stripped'
+deoblique_root = '_MNI_skull_stripped_deobliqued'
 
 
-data_dir_string = opj(ROOTDIR, data_dir_id)
-data_dir = os.listdir(data_dir_string)
+# information needed to deoblique the files using the registration code  that was
+# created by Michael and Zuzanna
+static_template_image = pjoin(ROOT_DATA_DIR , 'mni_icbm152_t1_tal_nlin_asym_09a_skull_stripped.nii.gz')
+starting_affine = np.eye(4)
 
-#get a list of all of the subject identifiers
-subjects = [subject for subject in data_dir if subject[0:3] == subject_identifier]
+# join the subparts of the anatomical file path
+data_dir_string = pjoin(ROOT_DATA_DIR, this_study_dir_id)
+subject_names = os.listdir(data_dir_string)
+
+
+#get a list of each subjects specific numerical identifiers
+subjects = [subject for subject in subject_names if subject[0:3] == subject_identifier]
 num_subjects = len(subjects)
 
 
 #get the path the each subjects directory
 subject_dir = []
 for Idx in range(num_subjects):
-    temp_subject_dir = opj(data_dir_string,subjects[Idx])
+    temp_subject_dir = pjoin(data_dir_string,subjects[Idx])
     subject_dir.append(temp_subject_dir)
 
 #get the path the each subjects anatomical directory
 anatomical_dir = []
 for Idx in range(num_subjects):
-    temp_anat_dir = opj(subject_dir[Idx], anatomical_dir_id)
+    temp_anat_dir = pjoin(subject_dir[Idx], anatomical_dir_id)
     anatomical_dir.append(temp_anat_dir)
 
 #get the path the each subjects anatomical file
 anatomical_file = []
 for Idx in range(num_subjects):
-    temp_anat_file = opj(anatomical_dir[Idx], subjects[Idx] + structural_identifier)
+    temp_anat_file = pjoin(anatomical_dir[Idx], subjects[Idx] + structural_identifier)
     anatomical_file.append(temp_anat_file)
 
 #create an anatomical results directory in the same file as the 'anatomical_dir'
 anat_preproc_results_dir = []
 for Idx in range(num_subjects):
-    path_to_subject_results_dir = opj(subject_dir[Idx], results_dir_id)
+    path_to_subject_results_dir = pjoin(subject_dir[Idx], results_dir_id)
     if not os.path.isdir(path_to_subject_results_dir):
         os.mkdir(path_to_subject_results_dir)
     anat_preproc_results_dir.append(path_to_subject_results_dir)
@@ -60,13 +83,13 @@ for Idx in range(num_subjects):
 
 def output_file_generator(in_file, out_file_ID, results_dir, subjectID):
     if in_file[-1] == 'z':
-        out_file = opj(results_dir, subjectID  + out_file_ID + '.nii.gz')
+        out_file = pjoin(results_dir, subjectID  + out_file_ID + '.nii.gz')
     else:
-        out_file = opj(results_dir, subjectID  + out_file_ID + '.nii')
+        out_file = pjoin(results_dir, subjectID  + out_file_ID + '.nii')
     return(out_file)
 
 MNI_reorient_results_files = []
-for Idx in range(num_subjects):
+for Idx in range(1):
     input_file = anatomical_file[Idx]
     output_file = output_file_generator(input_file, MNI_reorient_file_root, anat_preproc_results_dir[Idx], subjects[Idx])
     if not os.path.isfile(output_file):
@@ -80,7 +103,7 @@ for Idx in range(num_subjects):
 #run FSL Brain Extraction Tool (BET) to get a skull stripped image file.
 #To do this, structural_skull_strip is called from skull_strip.py
 skull_strip_result_files = []
-for Idx in range(num_subjects):
+for Idx in range(1):
     input_file = MNI_reorient_results_files[Idx]
     output_file = output_file_generator(input_file, skull_strip_file_root, anat_preproc_results_dir[Idx], subjects[Idx])
     if not os.path.isfile(output_file):
@@ -90,9 +113,20 @@ for Idx in range(num_subjects):
         print('skull strip already exists for ' + subjects[Idx] + ' : skipping this subject')
     skull_strip_result_files.append(output_file)
 
-#get static/moving_affine by doing nib.load affine) img.get_affine)
-"""print('do rigid transform (D_rigid*.png)')
-rigid_affine = transform_rigid(static, moving, static_affine, moving_affine, translation_affine, 10, "all")
-updated_moving_affine = rigid_affine.dot(moving_affine)
-rigid = resample(static, moving, static_affine, updated_moving_affine))
-#for Idx in range(num_subjects):"""
+
+# Call parts of the registration code to deoblique the brain images
+deobliqued_result_files = []
+for Idx in range(1):
+    static_img = nib.load(static_template_image)
+    static_data = static_img.get_data()
+    static_affine = static_img.get_affine()
+    moving_img = nib.load(skull_strip_result_files[Idx])
+    moving_data = moving_img.get_data()
+    moving_affine = moving_img.get_affine()
+    rigid_affine = transform_rigid(static_data, moving_data, static_affine, moving_affine, starting_affine, 10, "all")
+    updated_moving_affine = rigid_affine.dot(moving_affine)
+    rigid = resample(static_data, moving_data, static_affine, updated_moving_affine)
+    img = nib.Nifti1Image(rigid, static_affine)
+    output_file = output_file_generator(skull_strip_result_files[Idx], deoblique_root, anat_preproc_results_dir[Idx], subjects[Idx])
+    nib.save(img, output_file)
+    deobliqued_result_files.append(output_file)

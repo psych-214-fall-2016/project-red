@@ -10,7 +10,3 @@ def MNI_reorient(structural_nifti_file , out_file):
     MNI.inputs.out_file = out_file
     MNI_results = MNI.run()
     return MNI_results
-
-
-
-#MNI_reorient('/Users/despolab/CMF_Files/data/ds000030/sub-10171/anat/sub-10171_T1w.nii.gz', '/Users/despolab/CMF_Files/data/ds000030/sub-10171/anat/sub-10171_T1w_MNI.nii.gz')
