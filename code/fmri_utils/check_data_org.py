@@ -1,13 +1,35 @@
-"""get hashes for files in data folder, validate
-
-Run as:
-    python3 validate_data.py ../../data
 """
+verify that data organization is correct and all necessary files are present
 
+following instructions from project-red/README.md
+
+
+"""
 import os
-from os.path import join as pjoin
-import sys
+from os.path import dirname, join as pjoin, isdir
 import hashlib
+
+def safe_make_dir(dir_path):
+    """ make dir if doesn't exist already
+
+    Parameters
+    ----------
+    dir_path : str
+        Name of dir to create
+
+    Returns
+    -------
+    created : bool
+        if created new dir
+
+    """
+
+    if isdir(dir_path):
+        return False
+    else:
+        os.mkdir(dir_path)
+        return True
+
 
 def file_hash(filename):
     """ Get byte contents of file `filename`, return SHA1 hash
@@ -22,6 +44,7 @@ def file_hash(filename):
     hash : str
         SHA1 hexadecimal hash string for contents of `filename`.
     """
+
     # Open the file, read contents as bytes.
     fobj = open(filename, 'rb')
     contents = fobj.read()
@@ -30,8 +53,11 @@ def file_hash(filename):
     # Calculate, return SHA1 has on the bytes from the file.
     return hashlib.sha1(contents).hexdigest()
 
-def make_nii_hashes(data_directory, hash_file):
-    """ Generate hashes for all nii files in `data_directory`, save as output_file
+
+def make_nii_hashes_nested(data_directory, hash_file):
+    """ Generate hashes for all *.nii* in `data_directory`
+        find all *.nii* nested in dirs
+        save each <hash> <file_path> in `hash_file`
 
     Parameters
     ----------
@@ -47,9 +73,25 @@ def make_nii_hashes(data_directory, hash_file):
 
     """
 
-    all_files = os.listdir(data_directory)
-    nii_files = [f for f in all_files if f.find('.nii')>0]
+    dir_elements = os.listdir(data_directory)
 
+    # collect all *.nii* files in `data_directory`
+    nii_files = [f for f in dir_elements if f.find('.nii')>-1]
+
+    # collect all sub directories
+    sub_dirs = [f for f in dir_elements if isdir(pjoin(data_directory,f))]
+
+    # do same for each sub directory until end of tree
+    while len(sub_dirs)>0:
+        next_dirs = []
+
+        for s in sub_dirs:
+            dir_elements = os.listdir(pjoin(data_directory,s))
+            nii_files.extend([pjoin(s,f) for f in dir_elements if f.find('.nii')>-1])
+            next_dirs.extend([pjoin(s,f) for f in dir_elements if isdir(pjoin(data_directory,s,f))])
+        sub_dirs = next_dirs
+
+    # generate hashes in save each file info in `hash_file`
     g = open(pjoin(data_directory,hash_file),'w')
 
     for f in nii_files:
@@ -57,6 +99,7 @@ def make_nii_hashes(data_directory, hash_file):
         g.write(" ".join([hash_str,f,'\n']))
 
     g.close()
+
 
 def validate_data(data_directory, hash_file):
     """ Read ``data_hashes.txt`` file in `data_directory`, check hashes
@@ -101,17 +144,14 @@ def validate_data(data_directory, hash_file):
     return 1
 
 
-def main():
-    # Get the data directory from the command line arguments
-    if len(sys.argv) < 2:
-        raise RuntimeError("Please give data directory on "
-                           "command line")
-    data_directory = sys.argv[1]
 
+def main():
+
+    data_directory = pjoin(dirname(__file__),'../../data')
     hash_file = "data_hashes.txt"
 
-    # Generate hash_file for all *.nii* files in data directory
-    #make_nii_hashes(data_directory, hash_file)
+    # # Generate hash_file for all *.nii* files in data directory
+    # make_nii_hashes_nested(data_directory, hash_file)
 
     # Call function to validate data in data directory
     validate_data(data_directory, hash_file)
@@ -120,4 +160,5 @@ def main():
 
 if __name__ == '__main__':
     # Python is running this file as a script, not importing it.
+
     main()
