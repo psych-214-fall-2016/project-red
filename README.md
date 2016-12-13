@@ -1,6 +1,7 @@
 # Preprocessing in the 21st Century: A Musical Extravaganza (Project Red)
 
-Fall 2016 final project for PSY 214. In order to avoid using preprocessing without understanding what is happening, we  investigated a few main steps from a standard preprocessing pipeline. We attempted to implement anatomical preprocessing, functional preprocessing, segmentation, and registration. 
+Fall 2016 final project for PSY 214. 
+Before fMRI data can be meaningully analyzed, a series of steps to better prepare the data for analysis are taken: 'preprocessing.' All fMRI analysis packages implement a generally common framework for these steps, although the exact alogirthms applied and the decisions made are often not available, interpretabe, or understood. Rather than apply these steps without understanding what is happening in each one, we  investigated a few main steps from the 'standard' preprocessing pipeline. We attempted to implement anatomical preprocessing, functional preprocessing, segmentation, and registration mostly from scratch in Python, and compare our funcitonality in mechanism and results to that of available fMRI packages. 
 
 This file is in [Markdown
 format](http://daringfireball.net/projects/markdown), and should render nicely
@@ -89,6 +90,7 @@ Picture of how code flows together. [Insert here]
 * `some code`: de-oblique, skull strip, etc. 
 
 ### Functional preprocessing
+Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. We viewed this as both the most challenging, meaningful, and commonly applied step in funcitonal preprocessing. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. 
 * `optimize_map_coords.py`: optimizes coordinate mapping
 * `volume_realign.py`: realigns volumes in a 4D .nii file
 
