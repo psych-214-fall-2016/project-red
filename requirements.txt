@@ -4,4 +4,5 @@ nibabel
 scipy
 matplotlib
 joblib
+dipy
 nipype

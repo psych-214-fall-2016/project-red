@@ -88,6 +88,6 @@ def test_hash_sample():
 
 def test_main():
     try:
-        os.system('python3 fmri_utils.check_data_org.py')
+        os.system('python3 ../check_data_org.py')
     except FileNotFoundError:
         print('testing main; should fail because data missing img files')
