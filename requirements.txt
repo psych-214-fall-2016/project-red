@@ -5,3 +5,4 @@ scipy
 matplotlib
 joblib
 dipy
+nipype
