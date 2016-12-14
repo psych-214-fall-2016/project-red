@@ -211,15 +211,17 @@ def get_best_label(p, data, thetas, labels, L, beta, pairs):
     labels_r = labels.ravel()
 
     for label in L:
+        # Make new labeling
         labels_changed = copy.copy(labels_r)
         labels_changed[p] = label
+        labels_changed = labels_changed.reshape(labels.shape)
         # Compute energy of new labeling
-        post_energy = log_posterior(data, thetas, labels, beta, pairs)
+        post_energy = log_posterior(data, thetas, labels_changed, beta, pairs)
         # Update if new labeling has less energy
         if post_energy < min_energy:
             min_energy = post_energy
             best_label = label
-    return best_label
+    return best_label, min_energy
 
 def get_labels(data, thetas, current_labels, L, beta, max_iter, njobs):
     """
@@ -249,7 +251,7 @@ def get_labels(data, thetas, current_labels, L, beta, max_iter, njobs):
         Maximum number of ICM iterations.
 
     njobs : int
-        Number of jobs to do in parallel. 
+        Number of jobs to do in parallel.
 
     Output
     ------
@@ -266,13 +268,14 @@ def get_labels(data, thetas, current_labels, L, beta, max_iter, njobs):
         # Estimate best label for each pixel in parallel
         new_labels = Parallel(n_jobs=njobs, backend='threading')(delayed(get_best_label)(
                 p, data, thetas, current_labels, L, beta, pairs) for p in range(data.size))
+        p_labels, p_min_energy = zip(*new_labels)
         # Find best labeling across pixels
-        best_labels = current_labels.ravel()
-        best_idx = np.argmin(new_labels)
-        best_labels[best_idx] = new_labels[best_idx]
+        best_labels = copy.copy(current_labels).ravel()
+        best_idx = np.argmin(p_min_energy)
+        best_labels[best_idx] = p_labels[best_idx]
         # Update
         prev_labels = current_labels
-        current_labels = best_labels.reshape(current_labels)
+        current_labels = best_labels.reshape(current_labels.shape)
         iteration += 1
     return current_labels
 
