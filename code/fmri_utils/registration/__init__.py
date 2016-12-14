@@ -3,4 +3,3 @@ ___version__ = '0.1'
 
 from .shared import *
 from .code_our_version import *
-from .code_from_dipy import *
