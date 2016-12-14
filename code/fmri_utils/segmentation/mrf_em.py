@@ -436,7 +436,7 @@ def init_values(data, k, scale_range, scale_sigma):
         (min, max) Range of values from which start kmeans.
 
     scale_sigma : float
-        Maximum of range of values from which sigma will be initialized.
+        Sigma will be initialized with a random value between 1 and scale_sigma.
 
     Output
     ------
@@ -452,7 +452,7 @@ def init_values(data, k, scale_range, scale_sigma):
     labels = labels.reshape(data.shape)
     thetas = []
     for i in range(k):
-        sigma = np.random.rand() * scale_sigma
+        sigma = np.random.rand() * (scale_sigma - 1) + 1
         thetas.append([mus[i], sigma])
 
     return thetas, labels.astype(int)
@@ -482,7 +482,7 @@ def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
         (min, max) Range of values from which start kmeans.
 
     scale_sigma : float, default=20
-        Maximum of range of values from which sigma will be initialized.
+        Sigma will be initialized with a random value between 1 and scale_sigma.
 
     max_label_iter : int, default=100
         Maximum number of iterations for ICM.
