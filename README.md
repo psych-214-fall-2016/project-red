@@ -102,6 +102,13 @@ Segmentation takes the output of anatomical preprocessing and computes the proba
 
 ### Registration
 
+In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space. 
+
+In our code, we write our own methods to do a series of linear transformations to fit our T1 data to the MNI template. These transforms are finding the best fit (under mutual information) under matching just the center of masses, translations, rotations, and affine transformations including scaling and shearing. We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
+
+* `code_from_dipy.py`: a wrapper around dipy registration functions
+* `code_our_version`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
+* `registration_report.py`: code which uses the above registration methods on seven specific subjects to show its results.
 
 ## Discussion
 Although we'd hoped to implement each step fully, most were implemented as simpler versions of the corresponding steps in standard preprocessing pipelines. We were mainly limited by time and prior understanding/experience with coding and preprocessing. However, writing and testing code from scratch gave us a much better understanding of what the pipelines do,  and it underscored the complexity of these steps beyond the basic hand-wavy/intuitive ideas. Our main takeaway is that it's important to inspect analysis stages and not just accept final results. 
