@@ -549,9 +549,6 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
     None
 
     """
-    # create `output_dir` if it doesn't exist
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
 
     # extract affine file name from moving_filename
     affine_prefix = moving_filename.split('/')[-1]
@@ -604,9 +601,6 @@ def main():
     affines_dir = pjoin(reg_ex_dir, 'temp')
     iterations = 10
     output_dir = affines_dir
-
-    if not os.path.isdir(affines_dir):
-        os.mkdir(affines_dir)
 
     # generate new affines
     affine_registration(static_filename, moving_filename, SCALE, affines_dir, iterations)

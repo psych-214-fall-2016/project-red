@@ -216,3 +216,9 @@ def test_affine_registration():
     for f in expected_affines + expected_nii + expected_png + [A_filename, B_filename]:
         os.remove(pjoin(MY_DIR, f))
         assert(not os.path.exists(pjoin(MY_DIR, f)))
+
+def test_main():
+    try:
+        os.system('python3 ../registration/code_our_version.py')
+    except FileNotFoundError:
+        print('testing main; should fail because files missing')
