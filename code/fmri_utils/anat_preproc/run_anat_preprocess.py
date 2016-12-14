@@ -21,7 +21,7 @@ ROOT_DATA_DIR = pjoin(ROOTDIR, '../../../data')
 this_study_dir_id = 'ds000030'
 
 # this is the id for the directory with files used through the pipeline/tests
-this_study_template_id = 'MNI_template'
+this_study_template_id = 'template_files'
 
 anatomical_dir_id = 'anat'
 

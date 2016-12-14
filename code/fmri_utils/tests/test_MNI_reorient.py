@@ -5,7 +5,7 @@ from fmri_utils.anat_preproc.MNI_reorient import MNI_reorient
 
 # name of the file with the incorrect orientation
 ROOTDIR = dirname(__file__)
-ROOT_DATA_DIR = pjoin(ROOTDIR, '../../../data/MNI_template')
+ROOT_DATA_DIR = pjoin(ROOTDIR, '../../../data/template_files')
 bad_orientation_file = pjoin(ROOT_DATA_DIR, 'T1w_RPI.nii.gz')
 # name of the file to be created after the MNI reorientation
 out_file_name = pjoin(ROOT_DATA_DIR, 'T1w_RAS.nii.gz')
