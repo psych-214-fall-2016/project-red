@@ -221,7 +221,7 @@ def get_best_label(p, data, thetas, labels, L, beta, pairs):
             best_label = label
     return best_label
 
-def get_labels(data, thetas, current_labels, L, beta, max_iter=100):
+def get_labels(data, thetas, current_labels, L, beta, max_iter, njobs):
     """
     Do Iterative conditional modes (ICM) to find next best set of labels given
     the thetas. Returns the best labeling.
@@ -245,8 +245,11 @@ def get_labels(data, thetas, current_labels, L, beta, max_iter=100):
         forced to have the same label. Higher beta values correspond with more
         homogeneity.
 
-    max_iter : int, default=100
+    max_iter : int
         Maximum number of ICM iterations.
+
+    njobs : int
+        Number of jobs to do in parallel. 
 
     Output
     ------
@@ -261,7 +264,7 @@ def get_labels(data, thetas, current_labels, L, beta, max_iter=100):
     iteration = 0
     while should_go(prev_labels, current_labels, iteration, max_iter):
         # Estimate best label for each pixel in parallel
-        new_labels = Parallel(n_jobs=2, backend='threading')(delayed(get_best_label)(
+        new_labels = Parallel(n_jobs=njobs, backend='threading')(delayed(get_best_label)(
                 p, data, thetas, current_labels, L, beta, pairs) for p in range(data.size))
         # Find best labeling across pixels
         best_labels = current_labels.ravel()
@@ -451,7 +454,8 @@ def init_values(data, k, scale_range, scale_sigma):
 
     return thetas, labels.astype(int)
 
-def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20):
+def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
+            max_label_iter=100, njobs=1):
     """
     Run MRF-EM.
 
@@ -469,13 +473,20 @@ def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20)
         Number of labels.
 
     max_iter : int , default=10^5
-        Maximum number of iterations for ICM.
+        Maximum number of iterations for EM.
 
-    scale_range : tuple
+    scale_range : tuple, default=(0, 100)
         (min, max) Range of values from which start kmeans.
 
-    scale_sigma : float
+    scale_sigma : float, default=20
         Maximum of range of values from which sigma will be initialized.
+
+    max_label_iter : int, default=100
+        Maximum number of iterations for ICM.
+
+    njobs : int, default=1
+        How many jobs to run in parallel when looking for the next set of
+        most probable labels.
 
     Output
     ------
@@ -491,10 +502,7 @@ def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20)
     print('Initial thetas: ', thetas)
 
     for i in range(max_iter):
-        print(i)
-        label = get_labels(data, thetas, label, L, beta)
-        print('got labels')
+        label = get_labels(data, thetas, label, L, beta, max_label_iter, njobs)
         thetas = update_thetas(data, thetas, beta, label)
-        print('got thetas')
 
     return thetas, label
