@@ -1,4 +1,4 @@
-import os.remove as remove
+import os
 from os.path import dirname , isfile, join as pjoin
 import nibabel as nib
 from fmri_utils.anat_preproc.MNI_reorient import MNI_reorient
@@ -25,7 +25,7 @@ def test_MNI_reorient():
     # run the reorientation on the file with the bad orientation to create
     # a file with the correct orientation
     if isfile(out_file_name):
-        remove(out_file_name)
+        os.remove(out_file_name)
         MNI_reorient(bad_orientation_file, out_file_name)
 
     # load up the image data of the out file created in the previous step
