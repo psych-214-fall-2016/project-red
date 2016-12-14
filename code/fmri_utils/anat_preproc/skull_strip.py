@@ -7,7 +7,7 @@ from nipype.interfaces import fsl as fsl
 
 # Much of my knowledge about this came from the Nipype beginners guide.
 
- """Always make sure to look at the result of the skull stripping step to determine
+"""Always make sure to look at the result of the skull stripping step to determine
     if the function did a good job. This step has the most variability in the quality
     of the results. If the output file does not look sufficient, change the fractional
     intensity and/or the vertical_gradient until the result reaches the desired quality."""
