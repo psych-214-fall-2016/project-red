@@ -2,4 +2,4 @@
 
 SCIENCE!
 ![landmarks on MNI template]
-(project-red/report/figures/MNI.png)
+(https://github.com/zzbalews/project-red/report/figures/MNI.png)
