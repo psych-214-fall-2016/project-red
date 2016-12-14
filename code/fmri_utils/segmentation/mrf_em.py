@@ -15,7 +15,7 @@ import copy
 import scipy.misc
 import scipy.ndimage as ndimage
 from joblib import Parallel, delayed
-from kmeans import kmeans
+from fmri_utils.segmentation.kmeans import kmeans
 
 
 ### FUNCTIONS FOR MARKOV RANDOM FIELD MODEL ###
@@ -48,7 +48,7 @@ def log_likelihood(thetas, data, labels):
         for j in range(data.shape[1]):
             label_idx = labels[i, j]
             mu, sigma = thetas[label_idx]
-            u += (1 / (2 * sigma**2)) * (data - mu)**2 + np.log(sigma)
+            u += (1 / (2 * sigma**2)) * (data[i, j] - mu)**2 + np.log(sigma)
     return u
 
 def log_prior(pairs, labels, beta):
@@ -318,14 +318,14 @@ def get_neighbors(loc, dshape):
     """
     neighbors = []
     x, y = loc
-    if x > 0: neighbors.append([x-1, y])
-    if x + 1 < dshape[0]: neighbors.append([x+1, y])
-    if y > 0: neighbors.append([x, y-1])
-    if y + 1 < dshape[1]: neighbors.append([x, y+1])
-    if (x > 0) and (y > 0): neighbors.append([x-1, y-1])
-    if (x > 0) and (y+1 < dshape[1]): neighbors.append([x-1, y+1])
-    if (x+1 < dshape[0]) and (y > 0): neighbors.append([x+1, y-1])
-    if (x+1 < dshape[0]) and (y+1 < dshape[1]): neighbors.append([x+1, y+1])
+    if x > 0: neighbors.append([x-1, y]) # north
+    if x + 1 < dshape[0]: neighbors.append([x+1, y]) # south
+    if y > 0: neighbors.append([x, y-1]) # west
+    if y + 1 < dshape[1]: neighbors.append([x, y+1]) # east
+    if (x > 0) and (y > 0): neighbors.append([x-1, y-1]) # northwest
+    if (x > 0) and (y+1 < dshape[1]): neighbors.append([x-1, y+1]) # northeast
+    if (x+1 < dshape[0]) and (y > 0): neighbors.append([x+1, y-1]) # southwest
+    if (x+1 < dshape[0]) and (y+1 < dshape[1]): neighbors.append([x+1, y+1]) # southeast
     return neighbors
 
 def p_label(label, loc, current_labels):
@@ -362,7 +362,7 @@ def p_label(label, loc, current_labels):
     p = 0
     for n in neighbors:
         x2, y2 = n
-        if current_labels[x, y] == current_labels[x2, y2]:
+        if label == current_labels[x2, y2]:
             p += 1
     return scipy.misc.comb(n_neighbors, p) / norm
 
@@ -442,7 +442,7 @@ def init_values(data, k, scale_range, scale_sigma):
         each pixel's intensity to label means).
     """
     scale_min, scale_max = scale_range
-    mus, labels = kmeans(data.ravel(), k, scale_max=scale_max, scale_min=scale_min)
+    mus, labels, _ = kmeans(data.ravel(), k, scale_max=scale_max, scale_min=scale_min)
     labels = labels.reshape(data.shape)
     thetas = []
     for i in range(k):
