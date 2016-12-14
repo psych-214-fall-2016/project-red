@@ -3,3 +3,4 @@ numpy
 nibabel
 scipy
 matplotlib
+joblib

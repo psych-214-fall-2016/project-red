@@ -1,3 +1,14 @@
-85ad9b8d4eb87d61ad2f7077fc61ba2c49be39af mni_icbm152_t1_tal_nlin_asym_09a.nii 
-f962f8171523f8570c4b0a09a6a6fc250263bbf1 sub-10159_T1w.nii.gz 
-05e80b4950da9d73f01b3ee422f71f412b6e2f4e sub-10159_task-rest_bold.nii.gz 
+85ad9b8d4eb87d61ad2f7077fc61ba2c49be39af MNI_template/mni_icbm152_t1_tal_nlin_asym_09a.nii 
+f962f8171523f8570c4b0a09a6a6fc250263bbf1 ds000030/sub-10159/anat/sub-10159_T1w.nii.gz 
+05e80b4950da9d73f01b3ee422f71f412b6e2f4e ds000030/sub-10159/func/sub-10159_task-rest_bold.nii.gz 
+5e4323399f018ec7d0fd986d4f192bdfb44e4868 ds000030/sub-10171/anat/sub-10171_T1w.nii.gz 
+5be77ca22b30f12db765c00bb62128eaab19cdd3 ds000030/sub-10171/func/sub-10171_task-rest_bold.nii.gz 
+d6822c4c5ac049551fb642e4cbb174453401454f ds000030/sub-10189/anat/sub-10189_T1w.nii.gz 
+3ab662aecb0b559f916668863075b5decf76f59e ds000030/sub-10189/func/sub-10189_task-rest_bold.nii.gz 
+2870248e192cdb1ca9182d5df4f66713ad984685 ds000030/sub-10193/anat/sub-10193_T1w.nii.gz 
+140563070bd96e2331be3ccf52232ee9a01e48fe ds000030/sub-10206/anat/sub-10206_T1w.nii.gz 
+458e04dd4150cde166b193f544270252511d22ce ds000030/sub-10206/func/sub-10206_task-rest_bold.nii.gz 
+f207cc33689d651b0fde44756a4f196d3953a146 ds000030/sub-10217/anat/sub-10217_T1w.nii.gz 
+4d4af82be31871cae784ef178e15e1ccb85c66d3 ds000030/sub-10217/func/sub-10217_task-rest_bold.nii.gz 
+022ab935d6525cfb13d2403861de28d45b32abf5 ds000030/sub-10225/anat/sub-10225_T1w.nii.gz 
+07682470692d668da26782773493d5d540e2693d ds000030/sub-10225/func/sub-10225_task-rest_bold.nii.gz 
