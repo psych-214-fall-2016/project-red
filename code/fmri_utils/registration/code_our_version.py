@@ -549,6 +549,10 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
     None
 
     """
+    # create `output_dir` if it doesn't exist
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+
     # extract affine file name from moving_filename
     affine_prefix = moving_filename.split('/')[-1]
     idx = affine_prefix.find('.nii')
@@ -587,7 +591,7 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
 
 def main():
     # example usage: register sub-10159 anat to MNI template
-    
+
     MY_DIR = dirname(__file__)
     reg_ex_dir = pjoin(MY_DIR,'..','..','..','data','registration_example_files')
 

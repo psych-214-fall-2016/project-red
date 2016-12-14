@@ -170,5 +170,6 @@ def main():
 
         do_example(mni_filename, SUBJ, SCALE, from_saved, input_dir, output_dir) #reusing saved outputs
 
+
 if __name__ == '__main__':
     main()
