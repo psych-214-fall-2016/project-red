@@ -6,8 +6,8 @@ Tests for mrf_em.py
 
 import numpy as np
 from fmri_utils.segmentation.mrf_em import log_likelihood, log_prior, get_pairs, log_posterior, should_go, get_best_label
-from fmri_utils.segmentation.mrf_em import likelihood, get_neighbors, p_label
-from fmri_utils.segmentation.mrf_em import init_values
+from fmri_utils.segmentation.mrf_em import likelihood, get_neighbors, p_label, get_labels
+from fmri_utils.segmentation.mrf_em import init_values, mrf_em
 
 
 ### TESTS FOR MRF FUNCTIONS ###
@@ -59,9 +59,20 @@ def test_get_best_labels():
     pairs = [[0, 0], [1, 0]], [[0, 0], [0, 1]]
     p = 2
     L = [0, 1]
-    l = get_best_label(p, data, thetas, labels, L, beta, pairs)
+    l, min_energy = get_best_label(p, data, thetas, labels, L, beta, pairs)
+    # Check correct label, check returns better labeling
     assert(l == 0)
+    assert(min_energy <= log_posterior(data, thetas, labels, beta, pairs))
 
+def test_get_labels():
+    data = np.ones((2, 2))
+    thetas = [[1, 0.1], [0, 0.1]]
+    labels = np.array([[0, 0], [1, 1]])
+    L = [0, 1]
+    l = get_labels(data, thetas, labels, L, beta=0.5, max_iter=100,
+                njobs=2)
+    real_l = np.array([[0, 0], [0, 0]])
+    assert(np.allclose(l, real_l))
 
 ### TESTS FOR EM FUNCTIONS ###
 
@@ -112,3 +123,16 @@ def test_init_values():
     mus = [t[0] for t in thetas]
     assert(len(labels) == 20)
     assert(sorted(mus) == [10, 50])
+
+def test_mrf_em():
+    data = np.vstack((np.ones(5)*[8, 9, 10, 11, 12],
+                      np.ones(5)*[48, 49, 50, 51, 52]))
+    thetas, labels = mrf_em(data, beta=0.5, k=2, max_iter=10^5, scale_range=(0, 100),
+                        scale_sigma=10, max_label_iter=100, njobs=1)
+    mus = [t[0] for t in thetas]
+    # Two possbilities for labels
+    l1 = np.vstack((np.zeros(5), np.ones(5)))
+    l2 = np.vstack((np.ones(5), np.zeros(5)))
+    # Check means, labels are correct
+    assert(np.allclose(sorted(mus), [10, 50], atol=0.1))
+    assert(np.allclose(labels, l1) or np.allclose(labels, l2))
