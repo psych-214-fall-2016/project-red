@@ -73,6 +73,7 @@ def test_hash_sample():
         except ValueError:
             print('bad hash caught successfully!')
 
+        os.chdir(MY_DIR)
     # check that dir deleted
     #assert(not os.path.isdir(tempdir))
 

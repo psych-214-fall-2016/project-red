@@ -18,6 +18,8 @@ from fmri_utils.registration.shared import get_data_affine, decompose_rot_mat
 from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid, transform_affine, params2affine, save_affine, load_affine, rescale_img, affine_registration, generate_transformed_images
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
+MY_DIR = dirname(__file__)
+
 def test_resample():
     #check resample works, using fake data
     n = 5
@@ -155,8 +157,10 @@ def test_affine_files():
         # check the same info as saved
         assert(np.allclose(temp_affine, read_affine, atol=1e-4))
 
+        os.chdir(MY_DIR)
+        
     # check that dir deleted
-    #assert(not os.path.isdir(tempdir))
+    assert(not os.path.isdir(tempdir))
 
 def test_rescale():
     # move to temp dir so can save files
@@ -180,8 +184,9 @@ def test_rescale():
             assert(np.array_equal(expected_shape, scaled_data.shape))
             assert(np.array_equal(expected_affine, scaled_affine))
 
+        os.chdir(MY_DIR)
     # check that dir deleted
-    #assert(not os.path.isdir(tempdir))
+    assert(not os.path.isdir(tempdir))
 
 def test_affine_registration():
     # move to temp dir so can save files
@@ -224,8 +229,9 @@ def test_affine_registration():
         for f in expected_png:
             assert(os.path.exists(pjoin(tempdir, f)))
 
+        os.chdir(MY_DIR)
     # check that dir deleted
-    #assert(not os.path.isdir(tempdir))
+    assert(not os.path.isdir(tempdir))
 
 def test_main():
     try:
