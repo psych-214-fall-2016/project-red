@@ -237,6 +237,6 @@ def test_affine_registration():
 
 def test_main():
     try:
-        os.system('python3 ../registration/code_our_version.py')
+        os.system('python ../registration/code_our_version.py')
     except FileNotFoundError:
         print('testing main; should fail because files missing')
