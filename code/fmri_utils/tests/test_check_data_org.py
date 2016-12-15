@@ -12,7 +12,7 @@ import random, string
 
 from fmri_utils.check_data_org import make_nii_hashes_nested, validate_data, main
 
-
+MY_DIR = dirname(__file__)
 def test_hash_sample():
 
     # move to temp dir so can save files
