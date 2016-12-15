@@ -29,9 +29,7 @@ from fmri_utils.func_preproc.optimize_rotations import optimize_rot_vol, apply_r
 from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol, apply_coord_mapping
 
 
-
-
-def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, prefix = 'r', drop_vols = 0):
+def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, prefix = 'r', drop_vols = 0, guess_params = np.zeros(6)):
     """ Realign volumes obtained from a 4D Nifti1Image file
 
     Input
@@ -65,14 +63,17 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, pr
     img_dir, img_name = os.path.split(img_path)
 
     img = nib.load(img_path)
+    data = img.get_data()
 
     # smooth image, if designated
     if smooth_fwhm > 0:
         fwhm = smooth_fwhm
         img_smooth = proc.smooth_image(img, fwhm)
-        data_smooth = img_smooth.get_data()
-
-    data = img.get_data()
+        img_optimize = img_smooth
+        data_optimize = img_smooth.get_data()
+    else:
+        img_optimize = img
+        data_optimize = data
 
     # Dropping volumes, specified by input of drop_vols
     #data = data[...,drop_vols:]
@@ -89,6 +90,8 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, pr
         mid_vol = data[...,mid_index]
         ref_vol = mid_vol
 
+
+
     # array to which the realignment parameters for each of the 6 rigid body parameters
     #  will be added for each volume
     realign_params = np.zeros((n_vols, 6))
@@ -103,13 +106,13 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, pr
 
         # if this is after the first volume, use the previous volume's realignment
         #  parameters as a starting point guess
-        if i > 0:
-            guess_params = realign_params[i-1,:]*(-1) #Multiply this by -1?!?!?!?
+        if len(guess_params.shape) > 1:
+            guess_params_vol = guess_params[i,:]*(-1)
         else:
-            guess_params = np.zeros(6)
+            guess_params_vol = guess_params
 
         # testing out getting parameters from smoothed data
-        best_params = optimize_map_vol(ref_vol, data_smooth[...,i], img_smooth.affine, guess_params, jitter = jitter)
+        best_params = optimize_map_vol(ref_vol, data_optimize[...,i], img_optimize.affine, guess_params_vol, jitter = jitter)
 
         # resampling non-smoothed data using params determined above with smoothed data
         # resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine, guess_params)
@@ -125,7 +128,7 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, pr
         print('Realigned volume:', i)
     # save realigned img with the prefix to the same directory as the input img
     realigned_img = nib.Nifti1Image(data, img.affine)
-    nib.save(realigned_img, pjoin(img_dir, prefix + '_map_coords_' + img_name))
+    nib.save(realigned_img, pjoin(img_dir, prefix + img_name))
 
     return realigned_img, realign_params
 
@@ -156,15 +159,19 @@ def plot_realignment_parameters(rp, mm = True, degrees = True):
     return
 
 
-img_filename = 'sub-10159_task-rest_bold.nii'
 script_dir = dirname(__file__) # directory path where script is located
 utils_dir = dirname(script_dir) # directory path with 'tests' folder containing img
 code_dir = dirname(utils_dir)
 project_dir = dirname(code_dir)
+img_filename = 'sub-10159_task-rest_bold.nii'
 img_path = pjoin(project_dir, 'data', img_filename)
 
-realigned_img, rp = volume_4D_realign(img_path, smooth_fwhm = 5)
+# do a run with smoothing at 8mm, then 4mm
+realigned_img, rp = volume_4D_realign(img_path, smooth_fwhm = 5, jitter = 0.1, prefix = 'r_map_coords_')
+
+#img_filename_2  = 'r_map_coords_sub-10159_task-rest_bold.nii'
+#img_path_2 = pjoin(project_dir, 'data', img_filename_2)
+#realigned_img_2, rp_2 = volume_4D_realign(img_path, smooth_fwhm = 4, jitter = 0.1, prefix = 'r2_', guess_params = rp)
+
 plot_realignment_parameters(rp)
 np.savetxt('rp_map_coords_smooth5mm_sub-10159_task-rest_bold.txt', rp)
-
-# do a run with smoothing at 8mm, then 4mm

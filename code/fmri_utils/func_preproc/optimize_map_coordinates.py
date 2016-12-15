@@ -25,7 +25,7 @@ def correl_mismatch(ref_vol, vol1):
         array with data from the reference volume
 
     vol1: array shape (I, J, K)
-        array with data from the volume being transformed to the reference
+        array with data from the volume being transformed to the reference (resampled volume)
 
     Output
     -------
@@ -33,7 +33,15 @@ def correl_mismatch(ref_vol, vol1):
         correlation coefficient between the reference and transformed volumes
 
     """
-    correl = np.corrcoef(ref_vol.ravel(), vol1.ravel())[0, 1]
+    #correl = np.corrcoef(ref_vol.ravel(), vol1.ravel())[0, 1]
+
+    # filtering the resampled_vol to get rid of any new voxels wtih a value of zero from the resampling
+    #  boolean array of where there are differences in the zero values between the arrays
+    changed_0s = np.equal(ref_vol == 0, vol1 == 0)
+    ref_vol_dropped_new0s = ref_vol[changed_0s]
+    vol1_dropped_new0s = vol1[changed_0s]
+    correl = np.corrcoef(ref_vol_dropped_new0s, vol1_dropped_new0s)[0, 1]
+
     return -correl
 
 # Resampling function for any given volume and the reference (ref_vol)
@@ -125,7 +133,9 @@ def cost_at_xyz(RB_params, ref_vol, vol1, ref_vol_affine, jitter):
     # Resample vol1 for x,y,z translations and rotations and return the mismatch
     #  function value for the given rigid body parameters
     resampled_vol = apply_coord_mapping(RB_params, ref_vol, vol1, ref_vol_affine, jitter = jitter)
-    return correl_mismatch(resampled_vol, ref_vol)
+
+    # calculate mismatch for only non-zero voxels
+    return correl_mismatch(ref_vol, resampled_vol)
 
 # Optimization function to obtain best motion parameters and shifted volume
 def optimize_map_vol(ref_vol, vol1, ref_vol_affine, guess_params = np.array([0,0,0,0,0,0]), jitter = 0.0):
