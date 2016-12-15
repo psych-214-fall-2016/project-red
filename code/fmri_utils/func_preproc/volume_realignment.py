@@ -32,17 +32,32 @@ from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol, a
 
 
 def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', drop_vols = 0):
-    """
-    Input:
-    - 4D .nii img file
-    - ref_vol (0 for fist volume, 1 for middle), default first
-    - fwhm smoothing (value in mm, default is 0)
-    - prefix of new img file to be saved
-    - drop any volumes? index of volume, before which all volumes will be dropped (default = 0)
+    """ Realign volumes obtained from a 4D Nifti1Image file
 
-    Output:
-    - 4D .nii img file with realigned data (and prefix)
-    - 2d array (volume x 6) of motion parameters
+    Input
+    ----------
+    img_path: string
+        filepath of the 4D .nii image for which volumes will be realigned
+
+    reference: int
+        int with value 0 (default) or 1, indicating to use the first (0) or middle (1) volume as the reference
+
+    smooth_fwhm: int
+        value (in mm) of the FWHM used to smooth the image data before realignment
+
+    prefix: string
+        short string (default = 'r') added as the prefix for the returned 4D nii image
+
+    drop_vols: int
+        index of the volume before which all volumes will be dropped (defualt = 0)
+
+    Output
+    -------
+    realigned_img: .nii file
+        Nifti1Image containing the realigned volumes
+
+    realign_params: array shape (volumes x 6)
+        2D numpy array containign the 6 rigid body transformation values for each volume
     """
     img_dir, img_name = os.path.split(img_path)
 
@@ -52,7 +67,7 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
     if smooth_fwhm > 0:
         fwhm = smooth_fwhm
         img_smooth = proc.smooth_image(img, fwhm)
-        data_smooth = img.get_data()
+        data_smooth = img_smooth.get_data()
 
     data = img.get_data()
 
@@ -86,7 +101,7 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
         # if this is after the first volume, use the previous volume's realignment
         #  parameters as a starting point guess
         if i > 0:
-            guess_params = realign_params[i-1,:]
+            guess_params = realign_params[i-1,:]*(-1) #Multiply this by -1?!?!?!?
         else:
             guess_params = np.zeros(6)
 
@@ -148,3 +163,5 @@ img_path = pjoin(project_dir, 'data', img_filename)
 realigned_img, rp = volume_4D_realign(img_path, smooth_fwhm = 5)
 plot_realignment_parameters(rp)
 np.savetxt('rp_map_coords_smooth5mm_sub-10159_task-rest_bold.txt', rp)
+
+# do a run with smoothing at 8mm, then 4mm
