@@ -4,7 +4,7 @@ Run with:
 """
 
 import numpy as np
-from fmri_utils.segmentation.kmeans import *
+from fmri_utils.segmentation.kmeans import should_go, get_labels, get_centers, kmeans
 
 def test_should_go():
     centers = [1, 2, 3, 4]
