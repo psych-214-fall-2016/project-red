@@ -18,7 +18,7 @@ from fmri_utils.registration.shared import get_data_affine, decompose_rot_mat
 from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid, transform_affine, params2affine, save_affine, load_affine, rescale_img, affine_registration, generate_transformed_images
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
-MY_DIR = dirname(__file__)
+MY_DIR = dirname(os.path.abspath(__file__))
 
 def test_resample():
     #check resample works, using fake data
