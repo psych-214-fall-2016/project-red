@@ -452,11 +452,8 @@ def rescale_img(img_filename, SCALE):
 
     """
     # load data
-    img = nib.load(img_filename)
-
-    img_data = img.get_data()
-    img_affine = img.affine
-
+    img_data, img_affine = get_data_affine(img_filename)
+    
     # set downsample vars
     SCALE_affine = nib.affines.from_matvec(np.diagflat([1/SCALE]*3), np.zeros(3))
     img_scaled_shape = (np.array(img_data.shape)*SCALE).astype('int')

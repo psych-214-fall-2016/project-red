@@ -25,7 +25,7 @@ def get_data_affine(fname):
     """
     img = nib.load(fname)
     data = img.get_data()
-    affine = img.get_affine()
+    affine = img.affine
 
     return (data, affine)
 
