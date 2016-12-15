@@ -31,7 +31,7 @@ from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol, a
 
 
 
-def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', drop_vols = 0):
+def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, prefix = 'r', drop_vols = 0):
     """ Realign volumes obtained from a 4D Nifti1Image file
 
     Input
@@ -44,6 +44,9 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
 
     smooth_fwhm: int
         value (in mm) of the FWHM used to smooth the image data before realignment
+
+    jitter: float
+        amount of jitter optional to add random noise for realignment
 
     prefix: string
         short string (default = 'r') added as the prefix for the returned 4D nii image
@@ -106,7 +109,7 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, prefix = 'r', dr
             guess_params = np.zeros(6)
 
         # testing out getting parameters from smoothed data
-        best_params = optimize_map_vol(ref_vol, data_smooth[...,i], img_smooth.affine, guess_params)
+        best_params = optimize_map_vol(ref_vol, data_smooth[...,i], img_smooth.affine, guess_params, jitter = jitter)
 
         # resampling non-smoothed data using params determined above with smoothed data
         # resampled_vol, best_params = optimize_map_vol(ref_vol, data[...,i], img.affine, guess_params)

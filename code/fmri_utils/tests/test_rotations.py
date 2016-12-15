@@ -52,6 +52,6 @@ def test_optimize_rot_vol():
     #  indeed captures a very similar volume between the rotated and original
 
     derotated_vol1, best_params = optimize_rot_vol(vol1, rotated_vol1)
-    assert_almost_equal(best_params, rotations, decimal = 4)
+    assert_almost_equal(best_params, rotations, decimal = 2)
 
     return
