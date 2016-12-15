@@ -9,27 +9,6 @@ import os
 from os.path import dirname, join as pjoin, isdir
 import hashlib
 
-def safe_make_dir(dir_path):
-    """ make dir if doesn't exist already
-
-    Parameters
-    ----------
-    dir_path : str
-        Name of dir to create
-
-    Returns
-    -------
-    created : bool
-        if created new dir
-
-    """
-
-    if isdir(dir_path):
-        return False
-    else:
-        os.mkdir(dir_path)
-        return True
-
 
 def file_hash(filename):
     """ Get byte contents of file `filename`, return SHA1 hash
@@ -92,7 +71,7 @@ def make_nii_hashes_nested(data_directory, hash_file):
         sub_dirs = next_dirs
 
     # generate hashes in save each file info in `hash_file`
-    g = open(pjoin(data_directory,hash_file),'w')
+    g = open(hash_file,'w')
 
     for f in nii_files:
         hash_str = file_hash(pjoin(data_directory,f))
@@ -123,7 +102,7 @@ def validate_data(data_directory, hash_file):
         ``data_hashes.txt`` file.
     """
     # Read lines from ``data_hashes.txt`` file.
-    fobj = open(pjoin(data_directory,hash_file), 'rt')
+    fobj = open(hash_file, 'rt')
     lines = fobj.readlines()
     fobj.close()
 
@@ -153,7 +132,7 @@ def main():
     # make_nii_hashes_nested(data_directory, hash_file)
 
     # Call function to validate data in data directory
-    validate_data(data_directory, hash_file)
+    validate_data(data_directory, pjoin(data_directory, hash_file))
 
 
 

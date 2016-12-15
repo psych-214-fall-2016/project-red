@@ -6,17 +6,19 @@ Run with:
 """
 import os
 from os.path import dirname, join as pjoin
+from tempfile import TemporaryDirectory
 
 import nibabel as nib
 import numpy as np
 import numpy.linalg as npl
 from scipy.ndimage import affine_transform
 
+import tempfile
 from fmri_utils.registration.shared import get_data_affine, decompose_rot_mat
 from fmri_utils.registration.code_our_version import resample, transform_cmass, transform_rigid, transform_affine, params2affine, save_affine, load_affine, rescale_img, affine_registration, generate_transformed_images
 from fmri_utils.func_preproc.rotations import x_rotmat, y_rotmat, z_rotmat
 
-MY_DIR = dirname(__file__)
+MY_DIR = dirname(os.path.abspath(__file__))
 
 def test_resample():
     #check resample works, using fake data
@@ -84,7 +86,9 @@ def test_transform_rigid():
 
     new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), np.eye(4), 10, "rotations")
     new_rotation = decompose_rot_mat(new_affine[:3,:3])
+
     assert(np.allclose(new_rotation,original_rotation,atol=0.2)) #withing 0.1 radian
+
 
     # check translation & rotations
     original_translation = [2,2,1]
@@ -136,89 +140,103 @@ def test_transform_affine():
     #assert(np.allclose(new_shear,original_shear,atol=0.2)) #withing 0.2 units
 
 def test_affine_files():
+    # move to temp dir so can save files
+    with TemporaryDirectory() as tmpdirname:
+        os.chdir(tmpdirname)
+        tempdir = os.getcwd()
 
-    # save (4,4) np.array as text file
-    temp_affine = np.random.rand(4,4)
-    temp_filename = 'temp_affine.txt'
-    save_affine(temp_affine, MY_DIR, temp_filename)
+        # save (4,4) np.array as text file
+        temp_affine = np.random.rand(4,4)
+        temp_filename = 'temp_affine.txt'
+        save_affine(temp_affine, tempdir, temp_filename)
 
-    # check that file exists
-    assert(os.path.exists(pjoin(MY_DIR, temp_filename)))
+        # check that file exists
+        assert(os.path.exists(pjoin(tempdir, temp_filename)))
 
-    # load file
-    read_affine = load_affine(MY_DIR, temp_filename)
+        # load file
+        read_affine = load_affine(tempdir, temp_filename)
 
-    # check the same info as saved
-    assert(np.allclose(temp_affine, read_affine, atol=1e-4))
+        # check the same info as saved
+        assert(np.allclose(temp_affine, read_affine, atol=1e-4))
 
-    # delete created file
-    os.remove(pjoin(MY_DIR, temp_filename))
-    assert(not os.path.exists(pjoin(MY_DIR, temp_filename))) #confirm that deleted
+        os.chdir(MY_DIR)
+
+    # check that dir deleted
+    assert(not os.path.isdir(tempdir))
 
 def test_rescale():
+    # move to temp dir so can save files
+    with TemporaryDirectory() as tmpdirname:
+        os.chdir(tmpdirname)
+        tempdir = os.getcwd()
 
-    #check that new dimensions are correct
-    ORIG = np.zeros((20,15,27))
+        #check that new dimensions are correct
+        ORIG = np.zeros((20,15,27))
 
-    img_filename = pjoin(MY_DIR, 'temp.nii.gz')
-    img = nib.Nifti1Image(ORIG, np.eye(4))
-    nib.save(img, img_filename)
+        img_filename = pjoin(tempdir, 'temp.nii.gz')
+        img = nib.Nifti1Image(ORIG, np.eye(4))
+        nib.save(img, img_filename)
 
-    for SCALE in [0.6, 1.2]:
+        for SCALE in [0.6, 1.2]:
 
-        scaled_data, scaled_affine = rescale_img(img_filename, SCALE)
-        expected_shape = (np.array(ORIG.shape)*SCALE).astype('int')
-        expected_affine = nib.affines.from_matvec(np.eye(3)/SCALE, np.zeros(3))
+            scaled_data, scaled_affine = rescale_img(img_filename, SCALE)
+            expected_shape = (np.array(ORIG.shape)*SCALE).astype('int')
+            expected_affine = nib.affines.from_matvec(np.eye(3)/SCALE, np.zeros(3))
 
-        assert(np.array_equal(expected_shape, scaled_data.shape))
-        assert(np.array_equal(expected_affine, scaled_affine))
+            assert(np.array_equal(expected_shape, scaled_data.shape))
+            assert(np.array_equal(expected_affine, scaled_affine))
 
-    os.remove(img_filename)
-    assert(not os.path.exists(img_filename)) #confirm that deleted
+        os.chdir(MY_DIR)
+    # check that dir deleted
+    assert(not os.path.isdir(tempdir))
 
 def test_affine_registration():
-    # all subcomonents of this function are tested above; this test checks that function passes, files are saved and have reasonable contents
-    A_filename = pjoin(MY_DIR, 'temp_A.nii.gz')
-    B_filename = pjoin(MY_DIR, 'temp_B.nii.gz')
+    # move to temp dir so can save files
+    with TemporaryDirectory() as tmpdirname:
+        os.chdir(tmpdirname)
+        tempdir = os.getcwd()
 
-    temp = np.random.rand(10,8,13)
-    img = nib.Nifti1Image(temp, np.eye(4))
-    nib.save(img, A_filename)
-    nib.save(img, B_filename)
+        # all subcomonents of this function are tested above; this test checks that function passes, files are saved and have reasonable contents
+        A_filename = pjoin(tempdir, 'temp_A.nii.gz')
+        B_filename = pjoin(tempdir, 'temp_B.nii.gz')
 
-    # generate affines temp*.txt
-    affine_registration(A_filename, B_filename, 1, MY_DIR, 3)
+        temp = np.random.rand(10,8,13)
+        img = nib.Nifti1Image(temp, np.eye(4))
+        nib.save(img, A_filename)
+        nib.save(img, B_filename)
 
-    #generate images temp*.nii.gz and temp*.png
-    generate_transformed_images(A_filename, B_filename, 1, MY_DIR, MY_DIR)
+        # generate affines temp*.txt
+        affine_registration(A_filename, B_filename, 1, tempdir, 3)
 
-    # check that expected files exist
-    affine_steps = ['resampled','cmass','translation','rigid','sheared']
+        #generate images temp*.nii.gz and temp*.png
+        generate_transformed_images(A_filename, B_filename, 1, tempdir, tempdir)
 
-    expected_affines = ['temp_B_'+step+'.txt' for step in affine_steps]
-    expected_nii = [f[:-4]+'.nii.gz' for f in expected_affines]
-    expected_png = [f[:-4]+'_'+str(i)+'.png' for i in range(3) for f in expected_affines]
+        # check that expected files exist
+        affine_steps = ['resampled','cmass','translation','rigid','sheared']
 
-    for f in expected_affines:
-        assert(os.path.exists(pjoin(MY_DIR, f)))
-        read_affine = load_affine(MY_DIR, f)
-        assert(np.allclose(np.eye(4), read_affine)) # best affine is np.eye(4)
+        expected_affines = ['temp_B_'+step+'.txt' for step in affine_steps]
+        expected_nii = [f[:-4]+'.nii.gz' for f in expected_affines]
+        expected_png = [f[:-4]+'_'+str(i)+'.png' for i in range(3) for f in expected_affines]
 
-    for f in expected_nii:
-        assert(os.path.exists(pjoin(MY_DIR, f)))
-        read_img = nib.load(pjoin(MY_DIR, f))
-        assert(np.allclose(read_img.get_data(), temp)) # transformed image is original temp
+        for f in expected_affines:
+            assert(os.path.exists(pjoin(tempdir, f)))
+            read_affine = load_affine(tempdir, f)
+            assert(np.allclose(np.eye(4), read_affine)) # best affine is np.eye(4)
 
-    for f in expected_png:
-        assert(os.path.exists(pjoin(MY_DIR, f)))
+        for f in expected_nii:
+            assert(os.path.exists(pjoin(tempdir, f)))
+            read_img = nib.load(pjoin(tempdir, f))
+            assert(np.allclose(read_img.get_data(), temp)) # transformed image is original temp
 
-    # clean up files
-    for f in expected_affines + expected_nii + expected_png + [A_filename, B_filename]:
-        os.remove(pjoin(MY_DIR, f))
-        assert(not os.path.exists(pjoin(MY_DIR, f)))
+        for f in expected_png:
+            assert(os.path.exists(pjoin(tempdir, f)))
+
+        os.chdir(MY_DIR)
+    # check that dir deleted
+    assert(not os.path.isdir(tempdir))
 
 def test_main():
     try:
-        os.system('python3 ../registration/code_our_version.py')
+        os.system('python ../registration/code_our_version.py')
     except FileNotFoundError:
         print('testing main; should fail because files missing')
