@@ -226,7 +226,7 @@ def test_affine_registration():
         for f in expected_nii:
             assert(os.path.exists(pjoin(tempdir, f)))
             read_img = nib.load(pjoin(tempdir, f))
-            assert(np.allclose(read_img.get_data(), temp)) # transformed image is original temp
+            assert(np.allclose(read_img.get_data(), temp, atol = 0.01)) # transformed image is original temp
 
         for f in expected_png:
             assert(os.path.exists(pjoin(tempdir, f)))
