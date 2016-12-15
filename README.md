@@ -18,6 +18,7 @@ Run the following to install required packages:
 ```
 pip3 install --user -r requirements.txt
 ```
+Additionally, FSL is needed for anatomical preprocessing. Instructions for the download can be found [here](https://fsl.fmrib.ox.ac.uk/fsldownloads/fsldownloadmain.html).
 
 ### Installing
 
@@ -36,7 +37,7 @@ Put data files in the data directory so that the necessary files are found in th
 * Path to anatomical data: `/data/ds000030/sub-#####/anat/sub-#####_T1w.nii.gz`
 * Path to functional data: `/data/ds000030/sub-#####/func/sub-#####_task-rest_bold.nii.gz`
 
-You will also need the MNI template file. You can download it [here](https://bic-berkeley.github.io/psych-214-fall-2016/_downloads/mni_icbm152_t1_tal_nlin_asym_09a.nii). 
+You will also need the MNI template file. You can download it [here](https://bic-berkeley.github.io/psych-214-fall-2016/_downloads/mni_icbm152_t1_tal_nlin_asym_09a.nii).
 
 Put the MNI template in the data directory: `/data/mni_icbm152_t1_tal_nlin_asym_09a.nii`.
 
@@ -87,7 +88,10 @@ Tests are located in: `/code/fmri_utils/tests`
 Picture of how code flows together. [Insert here]
 
 ### Anatomical preprocessing
-* `some code`: de-oblique, skull strip, etc. 
+Anatomical preprocessing takes the raw T1 weighted image in order to prepare it for future steps in the preprocessing pipeline. The usual steps in anatomical preprocessing include deobliquing the image, reorienting the image to the desired space (in this case MNI/RAS+ space), performing bias reduction, and extracting the brain from the skull. For this project, MNI reorientation was performed first with the help of NIPYPE, followed by a combined bias-reduction/brain extraction with the help of NIPYPE. Finally, the T1 image was deobliqued with the help of the rigid body transformation script in the registration section of the project. All of these steps offered me a useful way to dig deeper into typical preprocessing steps. It highlighted the complexity of neuroimaging as well as the need to fully understand what is under the hood of any functions/programs used in the future. 
+* `run_anat_preprocess.py`: master file that calls the rest of the anatomical preproc steps
+* `MNI_reorient.py`: orient the image into RAS+ orientation 
+* `skull_strip.py`: performs bias reduction and removes the skull
 
 ### Functional preprocessing
 Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. We viewed this as both the most challenging, meaningful, and commonly applied step in funcitonal preprocessing. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. 
@@ -102,6 +106,13 @@ Segmentation takes the output of anatomical preprocessing and computes the proba
 
 ### Registration
 
+In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space. 
+
+In our code, we write our own methods to do a series of linear transformations to fit our T1 data to the MNI template. These transforms are finding the best fit (under mutual information) under matching just the center of masses, translations, rotations, and affine transformations including scaling and shearing. We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
+
+* `code_from_dipy.py`: a wrapper around dipy registration functions
+* `code_our_version`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
+* `registration_report.py`: code which uses the above registration methods on seven specific subjects to show its results.
 
 ## Discussion
 Although we'd hoped to implement each step fully, most were implemented as simpler versions of the corresponding steps in standard preprocessing pipelines. We were mainly limited by time and prior understanding/experience with coding and preprocessing. However, writing and testing code from scratch gave us a much better understanding of what the pipelines do,  and it underscored the complexity of these steps beyond the basic hand-wavy/intuitive ideas. Our main takeaway is that it's important to inspect analysis stages and not just accept final results. 

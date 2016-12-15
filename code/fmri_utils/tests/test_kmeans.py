@@ -4,7 +4,7 @@ Run with:
 """
 
 import numpy as np
-from fmri_utils.segmentation.kmeans import *
+from fmri_utils.segmentation.kmeans import should_go, get_labels, get_centers, kmeans
 
 def test_should_go():
     centers = [1, 2, 3, 4]
@@ -31,6 +31,11 @@ def test_get_centers():
 
 def test_kmeans():
     x = np.concatenate((np.ones(10)*10, np.ones(10)*50))
-    centers, _ = kmeans(x, k=2, scale=100)
+    centers, labels, maps = kmeans(x, k=2, scale_max=100, scale_min=0,
+                            map_keys=['a', 'b'])
     assert(len(centers) == 2)
     assert(sorted(centers) == [10, 50])
+    assert(len(labels) == len(x))
+    assert(len(maps) == 2)
+    assert(np.allclose(maps['a'], np.concatenate((np.ones(10), np.zeros(10)))))
+    assert(np.allclose(maps['b'], np.concatenate((np.zeros(10), np.ones(10)))))
