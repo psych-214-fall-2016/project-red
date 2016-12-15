@@ -86,7 +86,9 @@ def test_transform_rigid():
 
     new_affine = transform_rigid(FAKE, FAKE_moved, np.eye(4), np.eye(4), np.eye(4), 10, "rotations")
     new_rotation = decompose_rot_mat(new_affine[:3,:3])
-    assert(np.allclose(new_rotation,original_rotation,atol=0.2)) #withing 0.2 radian
+
+    assert(np.allclose(new_rotation,original_rotation,atol=0.2)) #withing 0.1 radian
+
 
     # check translation & rotations
     original_translation = [2,2,1]
@@ -158,7 +160,7 @@ def test_affine_files():
         assert(np.allclose(temp_affine, read_affine, atol=1e-4))
 
         os.chdir(MY_DIR)
-        
+
     # check that dir deleted
     assert(not os.path.isdir(tempdir))
 
