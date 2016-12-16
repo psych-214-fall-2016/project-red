@@ -146,7 +146,7 @@ def MI_cost(parameters, subset, fixed_parameters, static_data, moving_data, stat
     moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
 
     #get negative mutual information (static & new moving)
-    neg_MI = neg_mutual_info(static, resampled)
+    neg_MI = neg_mutual_info(static_data, moving_resampled)
 
     return neg_MI
 
