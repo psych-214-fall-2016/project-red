@@ -25,7 +25,8 @@ In our code, we write our own methods to find the best full affine transformatio
 To demonstrate that our image registration procedure is effective, we change the MNI template by a known linear transformation and attempt to recover the initial transformation. The figures below can be generated with `project-red/code/fmri_utils/registration/quality_report.py`.
 
 We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes.
-
+![change_affine.txt]
+(figures/change_affine.txt)
 
 In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space.
 We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
