@@ -4,6 +4,8 @@ code_our_version.py
 """
 import os
 from os.path import dirname, join as pjoin
+import csv
+
 import numpy as np
 import numpy.linalg as npl
 import nibabel as nib
@@ -144,9 +146,11 @@ def MI_cost(parameters, subset, fixed_parameters, static_data, moving_data, stat
     moving_resampled = resample(static_data, moving_data, static_affine, updated_moving_affine)
 
     #get negative mutual information (static & new moving)
-    neg_MI = (-1)*mutual_info(static_data, moving_resampled, 32)
+    neg_MI = neg_mutual_info(static_data, moving_resampled)
 
     return neg_MI
+
+
 
 def transform_rigid(static_data, moving_data, static_affine, moving_affine, starting_affine, iterations, partial='all'):
     """
@@ -317,6 +321,8 @@ def mutual_info(static_data, moving_data, nbins):
     return MI
 
 
+def neg_mutual_info(static, resampled):
+    return (-1)*mutual_info(static, resampled, 32)
 
 def params2affine(params):
     """
@@ -452,10 +458,7 @@ def rescale_img(img_filename, SCALE):
 
     """
     # load data
-    img = nib.load(img_filename)
-
-    img_data = img.get_data()
-    img_affine = img.affine
+    img_data, img_affine = get_data_affine(img_filename)
 
     # set downsample vars
     SCALE_affine = nib.affines.from_matvec(np.diagflat([1/SCALE]*3), np.zeros(3))
@@ -520,7 +523,7 @@ def load_affine(affines_dir, affine_filename):
     affine = np.array(lines_float)
     return affine
 
-def generate_transformed_images(static_filename, moving_filename, SCALE, affines_dir, output_dir):
+def generate_transformed_images(static_filename, moving_filename, SCALE, affines_dir, output_dir, subset='both'):
     """
     applies affines_dir/*.txt affines to moving image
     saves transformed *.nii.gz and middle slice overlays *.png in output_dir
@@ -544,6 +547,11 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
     output_dir : str
         path to dir where transformed *.nii.gz and *.png are saved
 
+    subset : str
+        'png' = only png overlays
+        'nii' = only nii files
+        'both' = png and nii files
+
     Returns
     -------
     None
@@ -555,6 +563,11 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
     idx = affine_prefix.find('.nii')
     affine_prefix = affine_prefix[:idx]
 
+    # summary file, save info about how images are generate
+    summary_file = open(pjoin(output_dir, affine_prefix + '_generated_images_summary.csv'), 'w')
+    summary_wr = csv.writer(summary_file)
+    summary_wr.writerow(['static_filename','moving_filename','transform_affine','negative_MI','generated_nii','generated_png'])
+
     # load static and moving images, downsample
     static, static_affine = rescale_img(static_filename, SCALE)
     moving, moving_affine = rescale_img(moving_filename, SCALE)
@@ -563,6 +576,7 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
 
     for affine_filename in affine_txt:
         print('... applying ' + affine_filename)
+
 
         # get prefix for output files
         idx = affine_filename.find('.txt')
@@ -575,15 +589,29 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
         updated_moving_affine = current_affine.dot(moving_affine)
         resampled = resample(static, moving, static_affine, updated_moving_affine)
 
+        # calculate neg_MI
+        neg_MI = neg_mutual_info(static, resampled)
+
         # save resampled *.nii.gz images with static_affine
-        img = nib.Nifti1Image(resampled, static_affine)
-        nib.save(img, pjoin(output_dir, prefix+'.nii.gz'))
+        nii_names = None
+        if subset in ['nii', 'both']:
+            nii_name = pjoin(output_dir, prefix+'.nii.gz')
+            img = nib.Nifti1Image(resampled, static_affine)
+            nib.save(img, nii_name)
 
         # save slice overlays with regtools from dipy.viz
-        regtools.overlay_slices(static, resampled, None, 0, 'Static', 'Moving', pjoin(output_dir, prefix+'_0.png'))
-        regtools.overlay_slices(static, resampled, None, 1, 'Static', 'Moving', pjoin(output_dir, prefix+'_1.png'))
-        regtools.overlay_slices(static, resampled, None, 2, 'Static', 'Moving', pjoin(output_dir, prefix+'_2.png'))
-        plt.close('all')
+        png_names = None
+        if subset in ['png', 'both']:
+            png_names = [None]*3
+            for i in range(3):
+                png_names[i] = pjoin(output_dir, prefix+'_'+str(i)+'.png')
+                regtools.overlay_slices(static, resampled, None, i, 'Static', 'Moving', png_names[i])
+            plt.close('all')
+
+        record = [static_filename, moving_filename, affine_filename, neg_MI, nii_names, png_names]
+        summary_wr.writerow(record)
+
+    summary_file.close()
 
 
 def main():

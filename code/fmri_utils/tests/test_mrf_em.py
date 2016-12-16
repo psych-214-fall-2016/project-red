@@ -109,10 +109,12 @@ def test_get_neighbors():
 def test_p_label():
     current_labels = np.array([[0, 0], [1, 1]])
     label = 1
+    beta = 1
     loc = [0, 1]
-    p = p_label(label, loc, current_labels)
-    p_real = 3 / 7
-    assert(p == p_real)
+    L = np.array([0, 1])
+    p = p_label(label, L, beta, loc, current_labels)
+    p_real = np.exp(-2) / (np.exp(-1) + np.exp(-2))
+    assert(np.isclose(p, p_real))
 
 
 ### TEST MAIN FUNCTIONS ###
@@ -127,8 +129,9 @@ def test_init_values():
 def test_mrf_em():
     data = np.vstack((np.ones(5)*[8, 9, 10, 11, 12],
                       np.ones(5)*[48, 49, 50, 51, 52]))
-    thetas, labels = mrf_em(data, beta=0.5, k=2, max_iter=10^5, scale_range=(0, 100),
-                        scale_sigma=10, max_label_iter=100, njobs=1)
+    thetas, labels, maps = mrf_em(data, beta=0.5, k=2, max_iter=10^5, scale_range=(0, 100),
+                        scale_sigma=10, max_label_iter=100, njobs=1,
+                        map_labels=['one', 'two'])
     mus = [t[0] for t in thetas]
     # Two possbilities for labels
     l1 = np.vstack((np.zeros(5), np.ones(5)))
@@ -136,3 +139,4 @@ def test_mrf_em():
     # Check means, labels are correct
     assert(np.allclose(sorted(mus), [10, 50], atol=0.1))
     assert(np.allclose(labels, l1) or np.allclose(labels, l2))
+    assert(len(maps) == 2)
