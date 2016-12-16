@@ -145,7 +145,7 @@ At each step the best parameters are minimizing a cost function, in this case th
 * translation transform of moving image
 * rigid (translation & rotation) transform of moving image
 * full affine (translation, rotation, scaling, & shearing) transform of moving image
-<img src="figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_MI.png" width = "500" align = "center">
+<img class="centered-and-cropped" width="200" height="200" style="border-radius:50%" src="figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_MI.png">
 
 From the overlay illustrations and negative mutual information plot, we are satisfied that our registration is successfully recovering the initial transform (given that some information is necessarily lost in the process of resampling). We feel confident enough in our process to proceed to a scientifically more interesting question:
 
