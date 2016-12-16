@@ -171,20 +171,32 @@ And this is where it ends (full affine transform):
 
 Let's look at the saggital plane for the remaining 6 subjects:
 
+sub-10171
+
 ![sheared_2]
 (figures/sub-10171_T1w_skull_stripped_sheared_2.png)
+
+sub-10189
 
 ![sheared_2]
 (figures/sub-10189_T1w_skull_stripped_sheared_2.png)
 
+sub-10193
+
 ![sheared_2]
 (figures/sub-10193_T1w_skull_stripped_sheared_2.png)
+
+sub-10206
 
 ![sheared_2]
 (figures/sub-10206_T1w_skull_stripped_sheared_2.png)
 
+sub-10217
+
 ![sheared_2]
 (figures/sub-10217_T1w_skull_stripped_sheared_2.png)
+
+sub-10225
 
 ![sheared_2]
 (figures/sub-10225_T1w_skull_stripped_sheared_2.png)
