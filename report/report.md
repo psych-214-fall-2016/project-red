@@ -134,7 +134,7 @@ Let's look at the saggital plane for the remaining 6 subjects:
 (figures/sub-10193_T1w_brain_sheared_backup_2.png)
 
 ![sheared_2]
-(figures/sub-101206_T1w_brain_sheared_backup_2.png)
+(figures/sub-10206_T1w_brain_sheared_backup_2.png)
 
 ![sheared_2]
 (figures/sub-10217_T1w_brain_sheared_backup_2.png)
@@ -142,8 +142,34 @@ Let's look at the saggital plane for the remaining 6 subjects:
 ![sheared_2]
 (figures/sub-10225_T1w_brain_sheared_backup_2.png)
 
-We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. 
+We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was: 
+* locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the sagital plane for each subject
+* on this z-place, get (x,y) coordinates for the right anterior and posterior insula, left and right ventricle peaks, and start of corpos callosum on the midline.
 
+The following plots show the full affine transformed T1 for each subject; saggital view on the left and axial view on the right; subject coordinates in green and MNI coordinates in red.
+
+![landmarks]
+(figures/sub-10159.png)
+
+![landmarks]
+(figures/sub-10171.png)
+
+![landmarks]
+(figures/sub-10189.png)
+
+![landmarks]
+(figures/sub-10193.png)
+
+![landmarks]
+(figures/sub-10206.png)
+
+![landmarks]
+(figures/sub-10217.png)
+
+![landmarks]
+(figures/sub-10225.png)
+
+Conclusion?
 ### How do our results compare to a similar registration procedure in the dipy package?
 
 
