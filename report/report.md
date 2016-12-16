@@ -6,6 +6,18 @@ Anatomical preprocessing takes the raw T1 weighted image in order to prepare it 
 ## Functional preprocessing
 Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. Options are available for the use of a first/middle reference volume, one/two realignment passes, and the level of smoothing applied to the data.
 
+####SPM Realignment parameters 
+*(linear transform, first volume as reference)*
+
+![Figure for SPM realign] 
+(figures/SPM_realign_output.png)
+
+###First attempt at realignment
+*(optimizing translations and rotations separately, no random jitter added to coordinates)*
+
+![Figure for first attempt at realignment]
+(figures/test_realign_mycode.png)
+
 ## Segmentation
 The goal of segmentation is to separate the anatomical volume into CSF, white matter, and gray matter. It takes the preprocessed anatomical volume and generates three tissue probability maps, one for each of the three tissue classes. The maps contain how probable it is for each voxel to belong to a tissue class. Here, we tried to implement segmentation using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST.
 
