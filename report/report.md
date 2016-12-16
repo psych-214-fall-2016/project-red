@@ -141,7 +141,7 @@ Registering individual subject T1s to the MNI template is a much harder problem 
 
 There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
 
-We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##.
+We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, this script uses the best affine transforms from saved from each registration step. There are instructions in the comments at the beginning of the file that explain how to re-run the registration optimizations.
 
 We'll look at one sample subject (sub-10159) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
 
@@ -197,36 +197,41 @@ sub-10225
 ![sheared_2]
 (figures/sub-10225_T1w_skull_stripped_sheared_2.png)
 
+We feel like while the alignment of the moving images is not perfect relative to the MNI's orientation, the results we are getting appear to be generally reasonable.
+
 ### How do our results compare to a similar registration procedure in the dipy package?
 
-Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d). (See end of report for more details.)
+Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d).
 
 Using dipy really gives us a gross sanity check that our registrations are in a reasonable ballpark. By eye we end up checking the location of ventricles and getting a general sense of how our registration is doing relative to dipy. In general this gives us a sense of confidence that we're on the right track.
 
-Comparing our affine transform to dipy, for subject 10189 with ours coming first:
+There are a few differences between our implementation and dipy's, so we didn't necessarily expect similar results. For example, they use a guassian pyramid and nonlinear interpolation, and in general their code runs more quickly.
 
-our registration, subject 10189:
+We're excited to see that our results are very comparable to what is produced by dipy. Here are two sample subjects as illustration:
+
+our registration, subject 10189, full affine transformation (translations, rotations, scaling, and shears):
 
 ![sheared_2]
 (figures/sub-10189_T1w_skull_stripped_sheared_2.png)
 
-dipy, subject 10189:
+dipy, subject 10189, full affine transformation:
 
 ![dipy_10189]
 (figures/dipy_10189.png)
 
 and then for subject 10206, with our registration again coming first:
 
-our registration, subject 10206:
+our registration, subject 10206, full affine transformation:
 
 ![sheared_2]
 (figures/sub-10206_T1w_skull_stripped_sheared_2.png)
 
-dipy, subject 10206:
+dipy, subject 10206, full affine transformation:
 
 ![dipy_10206]
 (figures/dipy_10206.png)
 
+To generate the full results from dipy on our selected seven subjects, including the intermediate stages of linear transfromations (just translation by center of mass, just translations, just translations and rotations, as well as a complete affine transformation,) the code is available at `registration/all_dipy_subjects.dipy`
 
 ### Using anatomical landmarking as a measure of registration quality
 
@@ -252,8 +257,7 @@ In the images below, you can see green dots for where we found landmarks on the 
 ![landmarks]
 (figures/sub-10225.png)
 
-
-One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the three following subjects (sub-10217, sub-10171, sub-10189)2, we see a clear drift of all of the landmarks, which we believe comes from the skull stripping process clipping off parts of the brain.
+The landmark alignment isn't perfect, but looks fairly close for the above subjects. However, in the three following subjects (sub-10217, sub-10171, sub-10189), we see a clear drift of all of the landmarks in the same upward direction. We predict this comes from the skull stripping process clipping off parts of the brain.  
 
 ![landmarks]
 (figures/sub-10217.png)
@@ -264,4 +268,4 @@ One of the hypotheses we made after visual inspection is that is it likely that 
 ![landmarks]
 (figures/sub-10189.png)
 
-Looking at these landmarks gave us something concrete to compare, which we may not have noticed otherwise. It is clear that one of the main drivers of this registration procedure is the outside of the brain, so in the future we will be very careful about the initial skull-stripping steps. In our case, this error is so large that any problems in registration due to actual brain differences are too subtle to pick up. However, we think this landmarks-based approach could still be very informative for these small differences after the skull-stripping issues are addressed.
+Looking at these landmarks gave us something concrete to compare, which we may not have noticed otherwise. It is clear that one of the main drivers of this registration procedure is the outside of the brain, so it makes sense that there is a clear link from the skull stripping process to 'drift' in the landmarks. In these few cases, the landmark mismatch due to skull-stripping problems is so large that any other problems in registration due to actual brain differences are too subtle to pick up. However, we think this landmarks-based approach could still be very informative for these small differences after resolving this bigger issue.
