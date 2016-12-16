@@ -30,7 +30,7 @@ Below are examples of k-means clustering applied to the middle slice for three s
 ### MRF-EM
 In k-means, each voxel was assigned a cluster based on its intensity value. However, where a voxel is located in the brain also says a lot about what kind of tissue it is. MRF-EM improves on k-means (and EM) by adding in spatial information: if two voxels are next to each other, then they probably belong in the same tissue class.
 
-See [this](links/MRF-EM_explain.html) page for more details! (couldn't figure out how to Latex with Markdown)
+See [this](https://links/MRF-EM_explain.html) page for more details! (couldn't figure out how to Latex with Markdown)
 
 **Reference:** Zhang, Y. and Brady, M. and Smith, S. Segmentation of brain MR images through a
 hidden Markov random field model and the expectation-maximization algorithm.
@@ -42,6 +42,7 @@ Because MRF-EM takes a long time to run, I segmented small sections of slices fr
 ![figure for s10159 segmentation]
 (figures/mrf_s10159_segment.png)
 
+Probability maps
 ![figure for s10159 maps]
 (figures/mrf_s10159_pmaps.png)
 
@@ -49,6 +50,7 @@ Because MRF-EM takes a long time to run, I segmented small sections of slices fr
 ![figure for s10189 segmentation]
 (figures/mrf_s10189_segment.png)
 
+Probability maps
 ![figure for s10189 maps]
 (figures/mrf_s10189_pmaps.png)
 
