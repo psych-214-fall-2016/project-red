@@ -593,7 +593,7 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
         neg_MI = neg_mutual_info(static, resampled)
 
         # save resampled *.nii.gz images with static_affine
-        nii_names = None
+        nii_name = None
         if subset in ['nii', 'both']:
             nii_name = pjoin(output_dir, prefix+'.nii.gz')
             img = nib.Nifti1Image(resampled, static_affine)
@@ -608,7 +608,7 @@ def generate_transformed_images(static_filename, moving_filename, SCALE, affines
                 regtools.overlay_slices(static, resampled, None, i, 'Static', 'Moving', png_names[i])
             plt.close('all')
 
-        record = [static_filename, moving_filename, affine_filename, neg_MI, nii_names, png_names]
+        record = [static_filename, moving_filename, affine_filename, neg_MI, nii_name, png_names]
         summary_wr.writerow(record)
 
     summary_file.close()

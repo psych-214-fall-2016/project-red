@@ -1,19 +1,34 @@
 from nipype.interfaces import fsl as fsl
-# This function strips the skull from the brain, creating a brain only file as well as
-# a brain mask file.
 
-# This is the FSL Brain Extraction Tool (BET) and has several protocols that can be
-# altered to optimize the results. Some of these protocols are described below.
 
-# Much of my knowledge about this came from the Nipype beginners guide.
-
-"""Always make sure to look at the result of the skull stripping step to determine
+"""***Always make sure to look at the result of the skull stripping step to determine
     if the function did a good job. This step has the most variability in the quality
     of the results. If the output file does not look sufficient, change the fractional
-    intensity and/or the vertical_gradient until the result reaches the desired quality."""
+    intensity and/or the vertical_gradient until the result reaches the desired quality.***"""
 
 
 def structural_skull_strip(reorient_file , out_file):
+
+    """This function strips the skull from the brain, creating a brain only file as well as
+    a brain mask file.
+
+    This is the FSL Brain Extraction Tool (BET) and has several protocols that can be
+    altered to optimize the results. Some of these protocols are described below.
+
+    Much of my knowledge about this came from the Nipype beginners guide.
+
+
+    input
+    ------
+    reorient_file: nifti.gz file
+    An MNI reoriented image
+
+    output
+    ------
+    out_file: nifti.gz file
+    an image with reduced bias and a stripped skull (brain only)
+
+    """
     skull_stripper = fsl.BET()
     skull_stripper.inputs.in_file = reorient_file
     skull_stripper.inputs.out_file = out_file

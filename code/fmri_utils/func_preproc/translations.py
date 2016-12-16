@@ -6,11 +6,7 @@ import numpy as np  # the Python array package
 import matplotlib.pyplot as plt  # the Python plotting package
 import scipy.ndimage as snd
 from scipy.optimize import fmin_powell
-# - set gray colormap and nearest neighbor interpolation by default
-plt.rcParams['image.cmap'] = 'gray'
-plt.rcParams['image.interpolation'] = 'nearest'
-# Tell numpy to print numbers to 4 decimal places only
-np.set_printoptions(precision=4, suppress=True)
+
 
 """ Common definitions for the following functions:
 
@@ -79,5 +75,5 @@ def optimize_trans_vol(vol0, vol1):
     """
     #global vol0, vol1
     best_params = fmin_powell(cost_at_xyz, [0, 0, 0], args = (vol0, vol1,))
-    optimized_vol1 = snd.affine_transform(vol1, [1, 1, 1], -best_params)
+    optimized_vol1 = snd.affine_transform(vol1, [1, 1, 1], -best_params, order=1)
     return optimized_vol1, best_params
