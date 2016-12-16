@@ -135,10 +135,10 @@ for p in example_png_files:
     img_file = p.split('/')[-1]
 
     #report images created with:
-    copyfile(p, pjoin(figs_dir, img_file))
+    #copyfile(p, pjoin(figs_dir, img_file))
 
-    #adjust filename to prevent overwrite of report images
-    #copyfile(p, pjoin(figs_dir, instruction+'_'+img_file))
+    #adjust filename to prevent overwrite of report images:
+    copyfile(p, pjoin(figs_dir, instruction+'_'+img_file))
 
 
 ##### show manually identified landmarks on transformed T1 images #####
@@ -221,8 +221,12 @@ for s in subjects:
     if s in coord_dict:
 
         f = save_coords_on_img(coord_dict[s], coord_dict['MNI'])
-        f.savefig(pjoin(report_dir, s+'.png'))
-        plt.show()
+        #report images created with:
+        #f.savefig(pjoin(figs_dir, s+'.png'))
+
+        #adjust filename to prevent overwrite of report images:
+        f.savefig(pjoin(figs_dir, instruction+'_'+s+'.png'))
+
     else:
         print('landmarks not identified for this subject; skipping figure generation')
 
