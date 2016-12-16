@@ -52,10 +52,10 @@ Because MRF-EM takes a long time to run, I segmented small sections of slices fr
 ![figure for s10189 maps]
 (figures/mrf_s10189_pmaps.png)
 
-As shown above, the MRF-EM algorithm makes white and gray matter areas more homogeneous and tries to force neighboring pixels to have the same label. Unfortunately we did not have time to compare these segmentations with the results from FSL FAST. However, since humans are better than algorithms at segmentations, we can at least say that the implementation seems to do a decent job. 
+As shown above, the MRF-EM algorithm makes white and gray matter areas more homogeneous and tries to force neighboring pixels to have the same label. Unfortunately we did not have time to compare these segmentations with the results from FSL FAST. However, since humans are better than algorithms at segmentations, we can at least say that the implementation seems to do a decent job.
 
 ## Registration
-In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output. We are using linear interpolation whenever resampling is required.
+In our code, we write our own methods to find the best full affine transformation to match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3 parameters; plus rotations, 6 total; plus scales, 9 total; plus shears, 12 total). The first search is initialized by matching the center of mass between the two images, and each remaining optimiziation is initialized with the preceding output. We are using linear interpolation whenever resampling is required.
 
 We are using skull-stripped images because the outside shape contributes meaningfully to the optimization procedure, and we are aiming to match brains not head/neck shapes. The examples below register the MNI template with itself or with individual subject T1 images, but the procedure is agnostic to the types of images being compared and could also be used to register individual T1 and sample T2\* volumes.
 
@@ -63,7 +63,7 @@ We are using skull-stripped images because the outside shape contributes meaning
 ### Does the registration procedure work?
 To demonstrate that our image registration procedure is effective, we change the MNI template by a known linear transformation and attempt to recover the initial transformation. The figures below can be generated with `project-red/code/fmri_utils/registration/quality_report.py` (~1 hr to run).
 
-We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes. We will call the original MNI template the "static" image, and the new transformed MNI template the "moving" image.
+We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes. We call the original MNI template the "static" image, and the new transformed MNI template the "moving" image.
 
 This set of figures shows cross sections of the static image on the left, the same cross sections of moving image on the right, and the overlap in the middle (green = left, red = right, yellow = overlap).
 
@@ -87,7 +87,7 @@ We start the registration process by translating the moving image to match the c
 ![cmass_2]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_cmass_2.png)
 
-The first optimization finds the best translation parameters (3) to minimize negative mutual information between the static and moving images, intialized with the above center of mass transform.
+The first optimization finds the best translation parameters (3) to minimize negative mutual information between the static and moving images, initialized with the above center of mass transform.
 
 ![translation_0]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_translation_0.png)
@@ -98,7 +98,7 @@ The first optimization finds the best translation parameters (3) to minimize neg
 ![translation_2]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_translation_2.png)
 
-The second optimization find the best rigid transform (translation and rotation) parameters (6), initalized with the best parameters from the previous step.
+The second optimization finds the best rigid transform (translation and rotation) parameters (6), initialized with the best parameters from the previous step.
 
 ![rigid_0]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_rigid_0.png)
@@ -109,7 +109,7 @@ The second optimization find the best rigid transform (translation and rotation)
 ![rigid_2]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_rigid_2.png)
 
-The third optimization find the best translation, rotation, and shearing parameters (9); the fourth optimization finds the best translation, rotation, shearing, and scaling parameters (12). Both are initalized with the best parameters from the previous step. Since the results are so similar in this case (no scaling or shearing was applied in the initial transform), we will show the results of the final full affine transformation.
+The third optimization finds the best translation, rotation, and shearing parameters (9); the fourth optimization finds the best translation, rotation, shearing, and scaling parameters (12). Both are initialized with the best parameters from the previous step. Since the results are so similar in this case (no scaling or shearing was applied in the initial transform), we will show the results of the final full affine transformation.
 
 ![MNI_resampled_0]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_sheared_0.png)
@@ -121,7 +121,7 @@ The third optimization find the best translation, rotation, and shearing paramet
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_sheared_2.png)
 
 
-At each step the best parameters are minizing a cost function, in this case the negative mutual information between the two images. This plot shows the negative mutual information between the static image and:
+At each step the best parameters are minimizing a cost function, in this case the negative mutual information between the two images. This plot shows the negative mutual information between the static image and:
 * itself (red): ideal minimum
 * inverse transform of moving image (green): actual minimum-- some information is lost due to resampling
 * transformed moving image
@@ -132,7 +132,7 @@ At each step the best parameters are minizing a cost function, in this case the 
 ![neg_MI]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_MI.png)
 
-From the overlay illustrations and negative mutual information plot, we are satisfied that our registration is successfully recovering the inital transform (given that some information is necessarily lost in the process of resampling). We feel confident enough in our process to proceed to a scientifically more interesting question:
+From the overlay illustrations and negative mutual information plot, we are satisfied that our registration is successfully recovering the initial transform (given that some information is necessarily lost in the process of resampling). We feel confident enough in our process to proceed to a scientifically more interesting question:
 
 ### How well does the registration procedure work for aligning individual subject T1s to the MNI template?
 Registering individual subject T1s to the MNI template is a much harder problem because, in addition to being translated and rotated, individual brains have different overall shapes, patterns of sulci and gyri, and may have a different distribution of intensity values.
@@ -182,8 +182,8 @@ Let's look at the saggital plane for the remaining 6 subjects:
 (figures/sub-10225_T1w_brain_sheared_backup_2.png)
 
 We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was:
-* locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the sagital plane for each subject
-* on this z-place, get (x,y) coordinates for the right anterior and posterior insula, left and right ventricle peaks, and start of corpos callosum on the midline.
+* locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the saggital plane for each subject
+* on this z-plane, get (x,y) coordinates for the right anterior and posterior insula, left and right ventricle peaks, and start of corpos callosum on the midline.
 
 The following plots show the full affine transformed T1 for each subject; saggital view on the left and axial view on the right; subject coordinates in green and MNI coordinates in red.
 
@@ -210,3 +210,13 @@ The following plots show the full affine transformed T1 for each subject; saggit
 
 Conclusion?
 ### How do our results compare to a similar registration procedure in the dipy package?
+
+There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
+
+Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach here (URL GOES HERE).
+
+However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by PAPER NAME FROM JB HERE, we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
+
+In the images below, you can see green dots for where we found landmarks on the template itself, and red for where the landmarks appeared on individual subject data post-registration.
+
+One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the two following subjects, NUMBER1 and NUMBER2, we see a clear drift of the NAME LANDMARKS, which we believe comes from the skull stripping process clipping off parts of the brain.  
