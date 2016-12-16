@@ -20,6 +20,14 @@ Math/code behind k-means, figures
 Math/code behind MRF-EM, figures
 
 ## Registration
-In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space.
+In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output.
 
-In our code, we write our own methods to do a series of linear transformations to fit our T1 data to the MNI template. These transforms are finding the best fit (under mutual information) under matching just the center of masses, translations, rotations, and affine transformations including scaling and shearing. We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
+To demonstrate that our image registration procedure is effective, we change the MNI template by a known linear transformation and attempt to recover the initial transformation. The figures below can be generated with `project-red/code/fmri_utils/registration/quality_report.py`.
+
+We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes.
+
+
+In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space.
+We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
+
+
