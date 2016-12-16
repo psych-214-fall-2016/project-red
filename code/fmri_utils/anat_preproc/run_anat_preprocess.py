@@ -2,6 +2,9 @@
 # Justin Riddle, Dan Lurie, and Zuzanna were all especially helpful,
 # as well as the rest of the project group
 
+# *****If registration does not exist or you want deobliqued images after this step,
+# take the quotes off of the last step of this script *****
+
 import os
 from os.path import dirname, join as pjoin
 import nibabel as nib
@@ -12,17 +15,18 @@ from fmri_utils.registration.code_our_version import resample, transform_rigid
 
 
 
-print('Running Anatomical Preprocessing: MNI Reorient, Skull Strip, Deoblique')
+print('Running Anatomical Preprocessing: MNI Reorient, Skull Strip, Deoblique.\n')
 
 
-# set up the path name with the anatomical files
+# start set up for the path name with the anatomical files
 ROOTDIR = dirname(__file__)
 ROOT_DATA_DIR = pjoin(ROOTDIR, '../../../data')
 this_study_dir_id = 'ds000030'
 
-# this is the id for the directory with files used through the pipeline/tests
+# this is the id for the directory with files used throughout the pipeline/tests
 this_study_template_id = 'template_files'
 
+# specific name of the directory with raw T1 images
 anatomical_dir_id = 'anat'
 
 # this is an identifier that is consistent across all subjects. It is used
@@ -56,25 +60,25 @@ subjects = [subject for subject in subject_names if subject[0:3] == subject_iden
 num_subjects = len(subjects)
 
 
-#get the path the each subjects directory
+#get the path to each subjects data directory
 subject_dir = []
 for Idx in range(num_subjects):
     temp_subject_dir = pjoin(data_dir_string,subjects[Idx])
     subject_dir.append(temp_subject_dir)
 
-#get the path the each subjects anatomical directory
+#get the path to each subjects anatomical file directory
 anatomical_dir = []
 for Idx in range(num_subjects):
     temp_anat_dir = pjoin(subject_dir[Idx], anatomical_dir_id)
     anatomical_dir.append(temp_anat_dir)
 
-#get the path the each subjects anatomical file
+#get the path to each subjects anatomical file
 anatomical_file = []
 for Idx in range(num_subjects):
     temp_anat_file = pjoin(anatomical_dir[Idx], subjects[Idx] + structural_identifier)
     anatomical_file.append(temp_anat_file)
 
-#create an anatomical results directory in the same file as the 'anatomical_dir'
+#create an anatomical results directory in the same directory as the 'anatomical_dir'
 anat_preproc_results_dir = []
 for Idx in range(num_subjects):
     path_to_subject_results_dir = pjoin(subject_dir[Idx], results_dir_id)
@@ -83,7 +87,8 @@ for Idx in range(num_subjects):
     anat_preproc_results_dir.append(path_to_subject_results_dir)
 
 
-
+# this function creates names/paths for output files.
+# this function gets called during anatomcial processing steps
 def output_file_generator(in_file, out_file_ID, results_dir, subjectID):
     if in_file[-1] == 'z':
         out_file = pjoin(results_dir, subjectID  + out_file_ID + '.nii.gz')
@@ -91,6 +96,8 @@ def output_file_generator(in_file, out_file_ID, results_dir, subjectID):
         out_file = pjoin(results_dir, subjectID  + out_file_ID + '.nii')
     return(out_file)
 
+# run FSL Reorient2Std in order to make sure the the brain has the proper
+# RAS+ orientation
 MNI_reorient_results_files = []
 for Idx in range(num_subjects):
     input_file = anatomical_file[Idx]
@@ -117,7 +124,12 @@ for Idx in range(num_subjects):
     skull_strip_result_files.append(output_file)
 
 
+
 # Call parts of the registration code to deoblique the brain images
+""" **** This step is only necessary if registration is not a future step in the processing pipeline.
+         Avoid this step if possible to skip unnecessary resampling of the data.**** """
+
+
 deobliqued_result_files = []
 for Idx in range(num_subjects):
     static_img = nib.load(static_template_image)
@@ -137,3 +149,5 @@ for Idx in range(num_subjects):
     else:
         print('rigid transform (deoblique) already exists for ' + subjects[Idx] + ': moving to next step')
     deobliqued_result_files.append(output_file)
+
+print('\nDone with anatomical MNI reorientation, skull stripping, and deobliquing!')
