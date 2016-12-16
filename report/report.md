@@ -122,7 +122,27 @@ And this is where it ends (full affine transform):
 ![sheared_2]
 (figures/sub-10159_T1w_brain_sheared_backup_2.png)
 
+Let's look at the saggital plane for the remaining 6 subjects:
 
+![sheared_2]
+(figures/sub-10171_T1w_brain_sheared_backup_2.png)
+
+![sheared_2]
+(figures/sub-10189_T1w_brain_sheared_backup_2.png)
+
+![sheared_2]
+(figures/sub-10193_T1w_brain_sheared_backup_2.png)
+
+![sheared_2]
+(figures/sub-101206_T1w_brain_sheared_backup_2.png)
+
+![sheared_2]
+(figures/sub-10217_T1w_brain_sheared_backup_2.png)
+
+![sheared_2]
+(figures/sub-10225_T1w_brain_sheared_backup_2.png)
+
+We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. 
 
 ### How do our results compare to a similar registration procedure in the dipy package?
 
