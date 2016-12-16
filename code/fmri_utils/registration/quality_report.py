@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 
 from fmri_utils.registration.shared import get_data_affine
-from fmri_utils.registration.code_our_version import params2affine, resample, affine_registration, generate_transformed_images, neg_mutual_info
+from fmri_utils.registration.code_our_version import params2affine, resample, affine_registration, generate_transformed_images, neg_mutual_info, save_affine
 
 
 ### transform MNI template by known translations & rotations
@@ -43,6 +43,7 @@ template_data, template_affine = get_data_affine(template_file)
 
 # apply transformation
 change_affine = params2affine(trans_init+rot_init)
+save_affine(change_affine, figs_dir, 'change_affine.txt')
 resampled_data = resample(template_data, template_data, template_affine, template_affine.dot(change_affine))
 
 # save resample dimage
