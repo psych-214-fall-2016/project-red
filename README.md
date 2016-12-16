@@ -55,7 +55,7 @@ Scripts in this package will create these directories (if they do not already ex
 Check the integrity of your data by running
 
 ```
-python3 /code/fmri_utils/data_hashes.py data
+python3 /code/fmri_utils/check_data_org.py
 ```
 
 This compares generated hashes for the data you downloaded with hashes in `/data/data_hashes.txt`.
@@ -110,6 +110,7 @@ Picture of how code flows together. [Insert here]
 ### Registration
 * `code_from_dipy.py`: a wrapper around dipy registration functions
 * `code_our_version`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
+* `quality_report.py`: code which uses the above regstration methods on template with known transform to show it works.
 * `registration_report.py`: code which uses the above registration methods on seven specific subjects to show its results.
 
 ## Discussion
