@@ -1,9 +1,5 @@
 # Report
 
-SCIENCE!
-![landmarks on MNI template]
-(figures/MNI.png)
-
 ## Anatomical preprocessing
 Anatomical preprocessing takes the raw T1 weighted image in order to prepare it for future steps in the preprocessing pipeline. The usual steps in anatomical preprocessing include deobliquing the image, reorienting the image to the desired space (in this case MNI/RAS+ space), performing bias reduction, and extracting the brain from the skull. For this project, MNI reorientation was performed first with the help of NIPYPE, followed by a combined bias-reduction/brain extraction with the help of NIPYPE. Finally, the T1 image was deobliqued with the help of the rigid body transformation script in the registration section of the project. All of these steps offered me a useful way to dig deeper into typical preprocessing steps. It highlighted the complexity of neuroimaging as well as the need to fully understand what is under the hood of any functions/programs used in the future.
 
@@ -20,6 +16,76 @@ Math/code behind k-means, figures
 Math/code behind MRF-EM, figures
 
 ## Registration
-In our registration step, we take the T1 data from each subject and fit it to a common template in MNI space.
+In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output. We are using linear interpolation whenever resampling is required.
 
-In our code, we write our own methods to do a series of linear transformations to fit our T1 data to the MNI template. These transforms are finding the best fit (under mutual information) under matching just the center of masses, translations, rotations, and affine transformations including scaling and shearing. We identify specific anatomical landmarks visually on each of the outputs as a way of assessing how effective our registration methods are, and also compare to the known registration package of dipy.
+### Does the registration procedure work?
+To demonstrate that our image registration procedure is effective, we change the MNI template by a known linear transformation and attempt to recover the initial transformation. The figures below can be generated with `project-red/code/fmri_utils/registration/quality_report.py` (~1 hr to run).
+
+We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes. We will call the original MNI template the "static" image, and the new transformed MNI template the "moving" image.
+
+This set of figures shows cross sections of the static image on the left, the same cross sections of moving image on the right, and the overlap in the middle (green = left, red = right, yellow = overlap). 
+![MNI_resampled_0]
+(figures/)
+![MNI_resampled_1]
+(figures/)
+![MNI_resampled_2]
+(figures/)
+
+We start the registration process by translating the moving image to match the center of mass with the static image.
+![MNI_resampled_0]
+(figures/)
+![MNI_resampled_1]
+(figures/)
+![MNI_resampled_2]
+(figures/)
+
+The first optimization finds the best translation parameters (3) to minimize negative mutual information between the static and moving images, intialized with the above center of mass transform.
+![MNI_resampled_0]
+(figures/)
+![MNI_resampled_1]
+(figures/)
+![MNI_resampled_2]
+(figures/)
+
+The second optimization find the best rigid transform (translation and rotation) parameters (6), initalized with the best parameters from the previous step.
+![MNI_resampled_0]
+(figures/)
+![MNI_resampled_1]
+(figures/)
+![MNI_resampled_2]
+(figu)
+
+
+The third optimization find the best translation, rotation, and shearing parameters (9); the fourth optimization finds the best translation, rotation, shearing, and scaling parameters (12). Both are initalized with the best parameters from the previous step. Since the results are so similar in this case (no scaling or shearing was applied in the initial transform), we will show the results of the final full affine transformation.
+![MNI_resampled_0]
+(figures/)
+![MNI_resampled_1]
+(figures/)
+![MNI_resampled_2]
+(figures/)
+
+
+At each step the best parameters are minizing a cost function, in this case the negative mutual information between the two images. This plot shows the negative mutual information between the static image and:
+* itself (red): ideal minimum
+* inverse transform of moving image (green): practicel minimum-- some information is lost due to resampling
+* transformed moving image
+* center of mass transform of moving image
+* translation transform of moving image
+* rigid (translation & rotation) transform of moving image
+* full affine (translation, rotation, scaling, & shearing) transform of moving image
+![MNI_resampled_2]
+(figures/)
+
+From the overlay illustrations and negative mutual information plot, we are satisfied that our registration is successfully recovering the inital transform (given that some information is necessarily lost in the process of resampling). We feel confident enough in our process to proceed to a scientifically more interesting question:
+
+### How well does the registration procedure work for aligning individual subject T1s to the MNI template?
+Registering individual subject T1s to the MNI template is a much harder problem because, in addition to being translated and rotated, individual brains have different overall shapes, patterns of sulci and gyri, and may have a different distribution of intensity values. 
+
+We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##. 
+
+
+
+
+### How do our results compare to a similar registration procedure in the dipy package?
+
+

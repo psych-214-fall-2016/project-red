@@ -109,9 +109,11 @@ Picture of how code flows together. [Insert here]
 
 ### Registration
 * `code_from_dipy.py`: a wrapper around dipy registration functions
-* `code_our_version`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
-* `quality_report.py`: code which uses the above regstration methods on template with known transform to show it works.
-* `registration_report.py`: code which uses the above registration methods on seven specific subjects to show its results.
+* `example_from_dipy.py`: adapted example from [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d).
+* `code_our_version.py`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
+* `shared.py`: general useful functions
+* `quality_report.py`: code which uses the regstration method in `code_our_version.py` on template with known transform to show it works.
+* `registration_report.py`: code which uses the regstration method in `code_our_version.py` on seven specific subjects to show its results.
 
 ## Discussion
 Although we'd hoped to implement each step fully, most were implemented as simpler versions of the corresponding steps in standard preprocessing pipelines. We were mainly limited by time and prior understanding/experience with coding and preprocessing. However, writing and testing code from scratch gave us a much better understanding of what the pipelines do,  and it underscored the complexity of these steps beyond the basic hand-wavy/intuitive ideas. Our main takeaway is that it's important to inspect analysis stages and not just accept final results.
