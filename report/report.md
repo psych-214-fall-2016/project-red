@@ -18,6 +18,9 @@ Math/code behind MRF-EM, figures
 ## Registration
 In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output. We are using linear interpolation whenever resampling is required.
 
+We are using skull-stripped images because the outside shape contributes meaningfully to the optimization procedure, and we are aiming to match brains not head/neck shapes. The examples below register the MNI template with itself or with individual subject T1 images, but the procedure is agnostic to the types of images being compared and could also be used to register individual T1 and sample T2\* volumes.
+
+
 ### Does the registration procedure work?
 To demonstrate that our image registration procedure is effective, we change the MNI template by a known linear transformation and attempt to recover the initial transformation. The figures below can be generated with `project-red/code/fmri_utils/registration/quality_report.py` (~1 hr to run).
 
@@ -81,7 +84,7 @@ The third optimization find the best translation, rotation, and shearing paramet
 
 At each step the best parameters are minizing a cost function, in this case the negative mutual information between the two images. This plot shows the negative mutual information between the static image and:
 * itself (red): ideal minimum
-* inverse transform of moving image (green): practicel minimum-- some information is lost due to resampling
+* inverse transform of moving image (green): actual minimum-- some information is lost due to resampling
 * transformed moving image
 * center of mass transform of moving image
 * translation transform of moving image
@@ -97,6 +100,27 @@ Registering individual subject T1s to the MNI template is a much harder problem 
 
 We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##. 
 
+We'll look at one sample subject (sub-10217) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
+
+![cmass_0]
+(figures/sub-10217_T1w_brain_cmass_backup_0.png)
+
+![cmass_1]
+(figures/sub-10217_T1w_brain_cmass_backup_1.png)
+
+![cmass_2]
+(figures/sub-10217_T1w_brain_cmass_backup_2.png)
+
+And this is where it ends (full affine transform):
+
+![sheared_0]
+(figures/sub-10217_T1w_brain_sheared_backup_0.png)
+
+![sheared_1]
+(figures/sub-10217_T1w_brain_sheared_backup_1.png)
+
+![sheared_2]
+(figures/sub-10217_T1w_brain_sheared_backup_2.png)
 
 
 
