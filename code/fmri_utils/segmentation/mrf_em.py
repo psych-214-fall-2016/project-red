@@ -334,7 +334,7 @@ def get_neighbors(loc, dshape):
     if (x+1 < dshape[0]) and (y+1 < dshape[1]): neighbors.append([x+1, y+1]) # southeast
     return neighbors
 
-def p_label(label, loc, current_labels):
+def p_label(label, L, beta, loc, current_labels):
     """
     Get the probability of a pixel at location loc being labeled with label given
     the labels of its neighbors.
@@ -343,6 +343,14 @@ def p_label(label, loc, current_labels):
     -----
     label : int
         Label being considered.
+
+    L : int array (# labels, )
+        Array containing possible labels.
+
+    beta : float
+        Parameter for determining how much two neighboring pixels should be
+        forced to have the same label. Higher beta values correspond with more
+        homogeneity.
 
     loc : list
         Contains [row, column] of pixel of interest in image.
@@ -361,18 +369,21 @@ def p_label(label, loc, current_labels):
     # Normalization factor
     norm = 0
     n_neighbors = len(neighbors)
-    for i in range(n_neighbors):
+    for i in range(n_neighbors+1):
         norm += scipy.misc.comb(n_neighbors, i)
 
     # Find probability
-    p = 0
+    p_labels = np.zeros(len(L))
     for n in neighbors:
         x2, y2 = n
-        if label == current_labels[x2, y2]:
-            p += 1
-    return scipy.misc.comb(n_neighbors, p) / norm
+        for l in L:
+            if l == current_labels[x2, y2]:
+                p_labels[l] += beta
+    Z = np.sum(np.exp(-p_labels))
+    p = (1 / Z) * np.exp(-p_labels[label])
+    return p
 
-def update_thetas(data, thetas, beta, current_labels):
+def update_thetas(data, thetas, beta, L, current_labels):
     """
     Update centers and variances of estimated Gaussians for labels.
 
@@ -388,6 +399,9 @@ def update_thetas(data, thetas, beta, current_labels):
         Parameter for determining how much two neighboring pixels should be
         forced to have the same label. Higher beta values correspond with more
         homogeneity.
+
+    L : int array (# labels, )
+        Array containing possible labels.
 
     current_labels: int array (n, m)
         Current labeling of image.
@@ -405,7 +419,7 @@ def update_thetas(data, thetas, beta, current_labels):
         g = likelihood(data, theta)
         for i in range(data.shape[0]):
             for j in range(data.shape[1]):
-                p_lx = p_label(label, [i, j], current_labels)
+                p_lx = p_label(label, L, beta, [i, j], current_labels)
                 # Update sums for each pixel
                 num_mu += g[i, j] * p_lx * data[i, j]
                 num_sigma += g[i, j] * p_lx * (data[i, j] - theta[0])**2
@@ -457,8 +471,8 @@ def init_values(data, k, scale_range, scale_sigma):
 
     return thetas, labels.astype(int)
 
-def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
-            max_label_iter=100, njobs=1):
+def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
+            max_label_iter=100, njobs=1, map_labels=['csf', 'white', 'gray']):
     """
     Run MRF-EM.
 
@@ -472,7 +486,7 @@ def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
         forced to have the same label. Higher beta values correspond with more
         homogeneity.
 
-    k : int, default=4
+    k : int, default=3
         Number of labels.
 
     max_iter : int , default=10^5
@@ -500,12 +514,33 @@ def mrf_em(data, beta, k=4, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
         Labels for each pixel. The labels are assigned using kmeans (distance of
         each pixel's intensity to label means).
     """
-    L = list(range(k))
+    L = np.array(range(k))
     thetas, label = init_values(data, k, scale_range, scale_sigma)
     print('Initial thetas: ', thetas)
 
+    # Get best labels for pixels
     for i in range(max_iter):
+        print('Iteration', i)
         label = get_labels(data, thetas, label, L, beta, max_label_iter, njobs)
-        thetas = update_thetas(data, thetas, beta, label)
+        thetas = update_thetas(data, thetas, beta, L, label)
 
-    return thetas, label
+    # Find probability maps
+    maps = {}
+    norm = np.zeros(data.shape) # Norm for probabilities
+    for ilabel, slabel in enumerate(map_labels):
+        theta = thetas[ilabel]
+        g = likelihood(data, theta)
+        norm += g
+        l_map = np.zeros(data.shape) # Output map for label
+        # Find probability for every voxel
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
+                p_lx = p_label(ilabel, L, beta, [i, j], label)
+                l_map[i, j] = g[i, j] * p_lx
+        # Add to maps dictionary
+        maps[slabel] = l_map
+    # Normalize maps
+    for slabel, m in maps.items():
+        maps[slabel] = m / norm
+
+    return thetas, label, maps
