@@ -22,6 +22,13 @@ from fmri_utils.func_preproc.translations import optimize_trans_vol
 from fmri_utils.func_preproc.optimize_rotations import optimize_rot_vol, apply_rotations
 from fmri_utils.func_preproc.optimize_map_coordinates import optimize_map_vol, apply_coord_mapping
 
+# getting the relative path info from the script
+script_dir = dirname(os.path.abspath(__file__)) # directory path where script is located
+print('Script dir:' + script_dir)
+utils_dir = dirname(script_dir) # directory path with 'tests' folder containing img
+code_dir = dirname(utils_dir)
+project_dir = dirname(code_dir)
+
 
 def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, prefix = 'r', drop_vols = 0, guess_params = np.zeros(6), mean_ref = np.zeros((64,64,30))):
     """ Realign volumes obtained from a 4D Nifti1Image file
@@ -57,7 +64,7 @@ def volume_4D_realign(img_path, reference = 0, smooth_fwhm = 0, jitter = 0.0, pr
     realign_params: array shape (volumes x 6)
         2D numpy array containign the 6 rigid body transformation values for each volume
     """
-    img_dir, img_name = os.path.split(img_path)
+    #img_dir, img_name = os.path.split(img_path)
 
     img = nib.load(img_path)
     data = img.get_data()
@@ -210,12 +217,15 @@ def run_realignment(img_name, smooth_fwhm = 5, num_pass = 1, prefix = 'r_'):
         Saved 4D .nii image with resampled, realigned volumes
 
     """
-    script_dir = dirname(__file__) # directory path where script is located
-    utils_dir = dirname(script_dir) # directory path with 'tests' folder containing img
-    code_dir = dirname(utils_dir)
-    project_dir = dirname(code_dir)
-    img_filename = img_name
-    img_path = pjoin(project_dir, 'data', img_filename)
+    # script_dir = dirname(__file__) # directory path where script is located
+    # utils_dir = dirname(script_dir) # directory path with 'tests' folder containing img
+    # code_dir = dirname(utils_dir)
+    # project_dir = dirname(code_dir)
+    # print(project_dir)
+    # img_filename = img_name
+    img_path = pjoin(project_dir, 'data', img_name)
+    #print(img_path)
+    #img_path = img_name
 
     if num_pass == 1:
         realigned_img, rp = volume_4D_realign(img_path, smooth_fwhm = smooth_fwhm, jitter = 0.1, prefix = prefix)
@@ -257,6 +267,13 @@ def get_mean_vol(img):
 
 
 def main():
+
+    # # getting the relative path info from the script
+    # script_dir = dirname(__file__) # directory path where script is located
+    # print('Script dir:' + script_dir)
+    # utils_dir = dirname(script_dir) # directory path with 'tests' folder containing img
+    # code_dir = dirname(utils_dir)
+    # project_dir = dirname(code_dir)
 
     parser = argparse.ArgumentParser()
 
