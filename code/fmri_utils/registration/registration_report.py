@@ -1,5 +1,31 @@
 """
 demonstration of registration section, to use in report
+
+Default usage in makefile. This will produce figures used in report by loading
+results of registration run on the original images (SCALE = 1).
+
+$ python registration_report load 1 sub-10159 sub-10171 sub-10189 sub-10193 sub-10206 sub-10217 sub-10225
+
+
+You can redo this registration from original skull-stripped MNI and subject T1
+images by changing 'load' to 'rerun'. This can take >1 hr/subject, so we
+recommend downsampling the images (e.g., SCALE = 0.5) since the results are qualitatively similar.
+
+$ python registration_report rerun 0.5 sub-10159 sub-10171 sub-10189 sub-10193 sub-10206 sub-10217 sub-10225
+
+
+Note: after registration, we manually identified landmark coordinates for
+individual subjects. The subject registration code can be reused for other
+subjects, but the script will not attempt to produce the final landmark plots
+for subjects outside the original set. The reuse this example
+To reuse this example with other subjects, please follow this usage:
+
+$ python registration_report.py instruction scale subj [subj] [...]
+    - `version` can be "load" (to reuse saved files) or "rerun" (to do registration again)
+    - `scale` is a number >0; 1 = original size (e.g. 0.5 = downsample to 1/2 3D array dimensions)
+    - `subj [subj] [...]` is a list of subject ids (must match dir name in project-red/data/ds000030)
+
+
 """
 
 import os, sys
@@ -16,141 +42,109 @@ import nibabel as nib
 from fmri_utils.registration.code_our_version import affine_registration, generate_transformed_images
 
 
-#####
-errormsg = 'please use the following command line structure\
-\n$ python registration_report.py instruction subj [subj] [...]\
-\nwhere version can be "load" (to reuse saved files) or "rerun" (to do registration again), \
-and subj [subj] [...] is a set of at least one subject directory'
+##### var setup; check necessary files exist #####
 
-if len(sys.argv) < 3:
-    raise RuntimeError('missing args! \n\n'+errormsg)
+# print this error message when command line arguments don't make sense
+errormsg = 'expected command line structure:\n\
+\n$ python registration_report.py instruction scale subj [subj] [...]\n\
+\n- `version` can be "load" (to reuse saved files) or "rerun" (to do registration again)\
+\n- `scale` is a number >0; 1 = original size (e.g. 0.5 = downsample to 1/2 3D array dimensions)\
+\n- `subj [subj] [...]` is a list of subject ids (must match dir name in project-red/data/ds000030)'
 
-instruction = sys.argv[1]
-subjects = sys.argv[2:]
-if instruction not in ['load', 'rerun']:
-    raise RuntimeError('wrong instruction! \n\n'+errormsg)
-
-# set paths
+# get abs path for project_dirname
 MY_DIR = dirname(abspath(__file__))
 project_dirname = 'project-red'
 idx = MY_DIR.rfind(project_dirname)
+
 project_path = MY_DIR[:(idx+len(project_dirname))]
 
+# set path for report figures
+figs_dir = pjoin(project_path, 'report', 'figures')
 
+# MNI template file to use for registration
+static_filename = pjoin(project_path, 'data', 'MNI_template', 'mni_icbm152_t1_tal_nlin_asym_09a_skull_stripped.nii.gz')
+if not os.path.exists(static_filename):
+    raise RuntimeError('expected static file missing: '+static_filename)
 
-# inidividual original T1, skull-stripped (DEFAULT)
-subject_T1s = [pjoin(project_path, 'data', 'ds000030', s, 'anatomical_results', s+'_T1w_skull_stripped.nii.gz') for s in subjects]
-print(subjects)
-print(subject_T1s)
-for sfile in subject_T1s:
-    if not os.path.exists(sfile):
-        raise RuntimeError('incorrect subject ids! \n\n'+errormsg)
-'''
-# `static` is the image we want to match (MNI template)
-# `moving` is the image we are transforming (subject T1)
-# All images are skull-stripped.
-#
-# There are 12 transformation parameters:
-# - 3 translations (along x-, y-, z-axis)
-# - 3 rotations (around x-, y-, z-axis)
-# - 3 scales (along x-, y-, z-axis)
-# - 3 shears (in xy-, xz-, yz-planes)
-#
-# Our affine registration using the following procedure to fit 12 transformation:
-# 0. resample `moving` image in `static` dimensions; visually inspect images look as expected
-# 1. find center of mass transform; use as init values for #2
-# 2. find best translation (3 free parameters); use as init values for #3
-# 3. find best rigid body transformation (6 free parameters); use as init values for #4
-# 4. find best full affine transformation (first fit 9 free parameters; use as init values to fit 12 free parameters)
+# take instructions, scale, and subject ids from command line
+if len(sys.argv) < 4:
+    raise RuntimeError('missing args! \n\n'+errormsg)
 
-#####
+# `instruction` can be "load" (to display saved results) or "rerun" (to do registration again)
+instruction = sys.argv[1]
+if instruction not in ['load', 'rerun']:
+    raise RuntimeError('wrong instruction! \n\n'+errormsg)
 
-## get affines at each registration step
+# SCALE must be float >0; SCALE = 1 is original images, smaller values downsample images and speed up registration
+try:
+    SCALE = float(sys.argv[2])
+except ValueError:
+    raise RuntimeError('scale arg needs to be numeric! \n\n'+errormsg)
 
-# subjects used in example
-subj_IDs = ['sub-10159', 'sub-10171', 'sub-10189', 'sub-10193', 'sub-10206', 'sub-10217', 'sub-10225']
-N = len(subj_IDs)
+# get subject ids; check that subject data dirs, skull-stripped images, and output dirs exists
+subjects = sys.argv[3:]
+N = len(subjects)
 
-# current dir, use as navigation reference
-MY_DIR = dirname(__file__)
-
-# read data and save outputs (project-red/data)
-data_dir = pjoin(MY_DIR,'..','..','..','data')
-
-# individual ouptput dirs (project-red/data/ds000040/sub-#####/registration_results)
-subj_output_dirs = [pjoin(data_dir, 'ds000030', s, 'registration_results') for s in subj_IDs]
-
-# will store final transformed T1 -> MNI space filenames here
-subj_T1s_inMNI = []
-
-# save figs for report (project-red/report/figures)
-report_dir = pjoin(data_dir, '..', 'report', 'figures')
-
-# rescale images for optimization & image generation
-SCALE = 1
-
-# MNI template, skull-stripped (DEFAULT)
-static_filename = pjoin(data_dir, 'registration_example_files', 'mni_icbm152_t1_tal_nlin_asym_09a_brain.nii.gz')
-
-# inidividual original T1, skull-stripped (DEFAULT)
-subj_T1s = [pjoin(data_dir, 'registration_example_files', s+'_T1w_brain.nii.gz') for s in subj_IDs]
-
-# location for saved affines (DEFAULT)
-subj_affines_dirs = [pjoin(data_dir, 'registration_example_files') for s in subj_IDs]
-
-
-""" # default: skip optimization; use saved affines
-# alternative: DO OPTIMIZATION, generate affines in `subj_output_dirs`
-iterations = 10
-
-# MNI template, skull-stripped (DO OPTIMIZATION)
-static_filename = pjoin(data_dir, 'MNI_template', 'mni_icbm152_t1_tal_nlin_asym_09a_skull_stripped.nii.gz')
-
-# inidividual original T1, skull-stripped (DO OPTIMIZATION)
-subj_T1s = [pjoin(data_dir, 'ds000030', s, 'anatomical_results', s+'_T1w_skull_stripped.nii.gz') for s in subj_IDs]
-
-# location to save affines (DO OPTIMIZATION)
-subj_affines_dirs = subj_output_dirs
-
-# run optimization for each subject
-for i in range(N):
-    print('REGISTRATION: ' + subj_IDs[i])
-    affine_registration(static_filename, subj_T1s[i], SCALE, subj_affines_dirs[i], iterations)
-"""
-
-## produce transformed T1 -> MNI *.nii.gz and overlap *.png files
+subject_dirs = [pjoin(project_path, 'data', 'ds000030', s) for s in subjects]
+subject_T1s = [pjoin(subject_dirs[i], 'anatomical_results', subjects[i]+'_T1w_skull_stripped.nii.gz') for i in range(N)]
+subject_output_dirs = [pjoin(subject_dirs[i], 'registration_results') for i in range(N)]
 
 for i in range(N):
-    print('GENERATING TRANSFORMED IMAGES: ' + subj_IDs[i])
-    #generate_transformed_images(static_filename, subj_T1s[i], SCALE, subj_affines_dirs[i], subj_output_dirs[i])
-
-    img_files = os.listdir(subj_output_dirs[i])
-    subj_T1s_inMNI.extend([i for i in img_files if i.find('.nii')>-1 & i.find('sheared')>-1])
-
-## move *.png for sample subject to project-red/report/figures
-
-sample_idx = 0
-
-img_files = os.listdir(subj_output_dirs[sample_idx])
-png_files = [i for i in img_files if i.find('.png')>-1]
-
-# for p in png_files:
-#     copyfile(pjoin(subj_output_dirs[sample_idx], p), pjoin(report_dir, p))
-#
+    if not os.path.isdir(subject_dirs[i]):
+        print(subject_dirs[i])
+        raise RuntimeError('incorrect subject id: '+subjects[i]+'\n\n'+errormsg)
+    if not os.path.exists(subject_T1s[i]):
+        raise RuntimeError('expected T1 missing: '+subject_T1s[i])
+    if not os.path.exists(subject_output_dirs[i]):
+        print('created output dir: '+subject_output_dirs[i])
+        os.mkdir(subject_output_dirs[i])
 
 
-##########
-# We identified a few landmarks on each transformed image (T1 in MNI space, using final affine transformation):
-# 1. Find the z-plane anterior_commissure (x=0, y=0, z=0 on MNI template)
-# 2. If landmark visable, find (x,y) coords in this z-plane for:
-#    - right anterior insula
-#    - right posterior insula
-#    - right ventricle top peak
-#    - left ventricle top peak
-#    - top of white matter (corpus callosum?)
+##### do registration #####
+
+affine_endings = ['_T1w_skull_stripped_'+A for A in ['resampled','cmass','translation','rigid','sheared']]
+
+if instruction == 'load':
+    # check that expected affines exist, raise error
+
+    expected_subject_affines = [pjoin(subject_output_dirs[i], subjects[i]+A+'.txt') for i in range(N) for A in affine_endings]
+    for i in range(len(expected_subject_affines)):
+        if not os.path.exists(expected_subject_affines[i]):
+            raise RuntimeError('trying to load registration restults; expected affine missing: '+expected_subject_affines[i])
+
+elif instruction == 'rerun':
+    # produce affines, use SCALE
+    for i in range(N):
+        print('\nDOING REGISTRATION: '+subjects[i])
+        affine_registration(static_filename, subject_T1s[i], SCALE, subject_output_dirs[i], iterations=10)
+
+
+##### produce *.nii* and *png for registration steps #####
+
+# always display with SCALE=1, even if registration used downsampled images
+for i in range(N):
+    print('\nGENERATING TRANSFORMED IMAGES: '+subjects[i])
+    generate_transformed_images(static_filename, subject_T1s[i], 1, subject_output_dirs[i], subject_output_dirs[i])
+
+subject_sheared_T1s = [pjoin(subject_output_dirs[i], subjects[i]+affine_endings[-1]+'.nii.gz') for i in range(N)]
+
+# copy example pngs to figs_dir for report!
+example_png_files = [f.replace('.nii.gz','_2.png') for f in subject_sheared_T1s]
+
+for p in example_png_files:
+    img_file = p.split('/')[-1]
+
+    #report images created with:
+    copyfile(p, pjoin(figs_dir, img_file))
+
+    #adjust filename to prevent overwrite of report images
+    #copyfile(p, pjoin(figs_dir, instruction+'_'+img_file))
+
+
+##### show manually identified landmarks on transformed T1 images #####
 
 ## load landmark location info from coordinate_info.csv
-coord_file = open(pjoin(data_dir, 'registration_example_files','coordinate_info.csv'),'r')
+coord_file = open(pjoin(figs_dir,'coordinate_info.csv'),'r')
 coord_info = [line for line in csv.reader(coord_file)][1:]
 
 coord_dict = {}
@@ -160,7 +154,7 @@ for i in range(len(coord_info)):
 # add img file paths
 coord_dict['MNI'] += [static_filename]
 for i in range(N):
-    coord_dict[subj_IDs[i]] += [pjoin(subj_output_dirs[i], subj_T1s_inMNI[i])]
+    coord_dict[subjects[i]] += [pjoin(subject_output_dirs[i], subject_sheared_T1s[i])]
 
 def str_to_array(txt):
     temp = txt.replace('(','').replace(')','')
@@ -170,10 +164,10 @@ def save_coords_on_img(subj_line, MNI_line):
     plt.rcParams['image.cmap'] = 'gray'
     plt.rcParams['image.interpolation'] = 'nearest'
 
-    colors = [[0,1,0], [1, 0, 0]]
+    colors = [[0,1,0], [1, 0, 0.5]]
     dot_sets = [subj_line, MNI_line]
 
-    fig, axes = plt.subplots(2,2)
+    fig, axes = plt.subplots(1,3)
     fig.suptitle(subj_line[0])
 
     for j in [0,1]:
@@ -186,13 +180,14 @@ def save_coords_on_img(subj_line, MNI_line):
 
         if j==0:
             data = img.get_data()
-            for h in [0,1]:
-                axes[h][0].imshow(data[int(mid_coord[0]),...].T)
-                axes[h][1].imshow(data[...,int(mid_coord[-1])].T)
+            axes[0].imshow(data[int(mid_coord[0]),...].T)
+            axes[1].imshow(data[...,int(mid_coord[-1])].T)
+            axes[2].imshow(data[...,int(mid_coord[-1])].T)
 
-        for h in [0,1]:
-            axes[h][0].scatter([mid_coord[1]],[mid_coord[2]], s = 6, c = colors[j])
-            axes[h][1].scatter([mid_coord[0]],[mid_coord[1]], s = 6, c = colors[j])
+        axes[0].scatter([mid_coord[1]],[mid_coord[2]], s = 20, c = colors[j])
+        axes[1].scatter([mid_coord[0]],[mid_coord[1]], s = 10, c = colors[j])
+        axes[2].scatter([mid_coord[0]],[mid_coord[1]], s = 15, c = colors[j])
+
 
         for i in range(3,8):
             subj_pt = dot_sets[j][i]
@@ -200,30 +195,35 @@ def save_coords_on_img(subj_line, MNI_line):
             if subj_pt != '':
                 subj_xyz = str_to_array(subj_pt)
                 coord = subj_xyz.dot(mat)+vec
-                for h in [0,1]:
-                    axes[h][1].scatter([coord[0]],[coord[1]], s = 6, c = colors[j])
+                axes[1].scatter([coord[0]],[coord[1]], s = 10, c = colors[j])
+                axes[2].scatter([coord[0]],[coord[1]], s = 15, c = colors[j])
 
-    axes[0][0].set_xlim([100, 150])
-    axes[0][0].set_ylim([50, 100])
 
-    axes[1][0].set_xlim([0, data.shape[1]])
-    axes[1][0].set_ylim([0, data.shape[2]])
 
-    axes[0][0].legend([subj_line[0],'MNI'], bbox_to_anchor = (0.6, 1.1), borderaxespad = 0)
+    axes[0].set_xlim([0, data.shape[1]])
+    axes[0].set_ylim([0, data.shape[2]])
 
-    axes[0][1].set_xlim([50, 150])
-    axes[0][1].set_ylim([100, 180])
+    axes[0].legend([subj_line[0],'MNI'], bbox_to_anchor = (1, 2))
 
-    axes[1][1].set_xlim([0, data.shape[0]])
-    axes[1][1].set_ylim([0, data.shape[1]])
+    axes[1].set_xlim([0, data.shape[0]])
+    axes[1].set_ylim([0, data.shape[1]])
+
+
+    axes[2].set_xlim([50, 150])
+    axes[2].set_ylim([100, 180])
+
+
 
 
     return fig
 
-for s in subj_IDs:
-    f = save_coords_on_img(coord_dict[s], coord_dict['MNI'])
-    f.savefig(pjoin(report_dir, s+'.png'))
+for s in subjects:
+    if s in coord_dict:
+
+        f = save_coords_on_img(coord_dict[s], coord_dict['MNI'])
+        f.savefig(pjoin(report_dir, s+'.png'))
+        plt.show()
+    else:
+        print('landmarks not identified for this subject; skipping figure generation')
 
 plt.close('all')
-
-'''
