@@ -44,6 +44,7 @@ template_data, template_affine = get_data_affine(template_file)
 # apply transformation
 change_affine = params2affine(trans_init+rot_init)
 save_affine(change_affine, figs_dir, 'change_affine.txt')
+
 resampled_data = resample(template_data, template_data, template_affine, template_affine.dot(change_affine))
 
 # save resample dimage
