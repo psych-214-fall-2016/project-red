@@ -141,7 +141,38 @@ Registering individual subject T1s to the MNI template is a much harder problem 
 
 There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
 
+### How do our results compare to a similar registration procedure in the dipy package?
+
 Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d). (See end of report for more details.)
+
+Using dipy really gives us a gross sanity check that our registrations are in a reasonable ballpark. By eye we end up checking the location of ventricles by eye and getting a general sense of how our registration is doing relative to dipy. In general this gives us a general sense of confidence that we're on the right track.
+
+Comparing our affine transform to dipy, for subject 10189 with ours coming first:
+
+our registration, subject 10189:
+
+![sheared_2]
+(figures/sub-10189_T1w_skull_stripped_sheared_2.png)
+
+dipy, subject 10189:
+
+![dipy_10189]
+(figures/dipy_10189.png)
+
+and then for subject 10206, with our registration again coming first:
+
+our registration, subject 10206:
+
+![sheared_2]
+(figures/sub-10206_T1w_skull_stripped_sheared_2.png)
+
+dipy, subject 10206:
+
+![dipy_10206]
+(figures/dipy_10206.png)
+
+
+### Using anatomical landmarking as a measure of registration quality
 
 However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by [Klein et al 2009](https://www.ncbi.nlm.nih.gov/pubmed/19195496), we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
 
@@ -220,7 +251,7 @@ In the images below, you can see green dots for where we found landmarks on the 
 (figures/sub-10225.png)
 
 
-One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the three following subjects (sub-10217, sub-10171, sub-10189)2, we see a clear drift of all of the landmarks, which we believe comes from the skull stripping process clipping off parts of the brain. 
+One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the three following subjects (sub-10217, sub-10171, sub-10189)2, we see a clear drift of all of the landmarks, which we believe comes from the skull stripping process clipping off parts of the brain.
 
 ![landmarks]
 (figures/sub-10217.png)
@@ -232,5 +263,3 @@ One of the hypotheses we made after visual inspection is that is it likely that 
 (figures/sub-10189.png)
 
 Looking at these landmarks gave us something concrete to compare, which we may not have noticed otherwise. It is clear that one of the main drivers of this registration procedure is the outside of the brain, so in the future we will be very careful about the initial skull-stripping steps. In our case, this error is so large that any problems in registration due to actual brain differences are too subtle to pick up. However, we think this landmarks-based approach could still be very informative for these small differences after the skull-stripping issues are addressed.
-
-### How do our results compare to a similar registration procedure in the dipy package?
