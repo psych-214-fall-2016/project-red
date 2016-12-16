@@ -1,4 +1,4 @@
-# Preprocessing in the 21st Century: A Musical Extravaganza (Project Red)
+# Preprocessing in the 21st Century: [A Musical Extravaganza](https://www.youtube.com/watch?v=hm7_elsseuU) (Project Red)
 
 Fall 2016 final project for PSY 214.
 Before fMRI data can be meaningully analyzed, a series of steps to better prepare the data for analysis are taken: 'preprocessing.' All fMRI analysis packages implement a generally common framework for these steps, although the exact alogirthms applied and the decisions made are often not available, interpretabe, or understood. Rather than apply these steps without understanding what is happening in each one, we  investigated a few main steps from the 'standard' preprocessing pipeline. We attempted to implement anatomical preprocessing, functional preprocessing, segmentation, and registration mostly from scratch in Python, and compare our funcitonality in mechanism and results to that of available fMRI packages.
