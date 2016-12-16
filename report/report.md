@@ -18,6 +18,8 @@ Functional preprocessing is the collective term applied to the steps taken from 
 ![Figure for first attempt at realignment]
 (figures/test_realign_mycode.png)
 
+Most of the optimized realignment parameters here came back at 0. In the end, we think this results from being trapped in local minima of the voxel coordinate grid. The results after this image all then used coordinate mapping instead of affine transforms to do image resampling, with random jitter added to the cooridnate grid. As the next plots demonstrate, this approach avoided the local minima at 0 values and more closely mirrored the outputs from SPM's realignment. 
+
 ## Segmentation
 The goal of segmentation is to separate the anatomical volume into CSF, white matter, and gray matter. It takes the preprocessed anatomical volume and generates three tissue probability maps, one for each of the three tissue classes. The maps contain how probable it is for each voxel to belong to a tissue class. Here, we tried to implement segmentation using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST.
 
