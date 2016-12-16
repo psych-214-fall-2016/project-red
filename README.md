@@ -55,7 +55,7 @@ Scripts in this package will create these directories (if they do not already ex
 Check the integrity of your data by running
 
 ```
-python3 /code/fmri_utils/data_hashes.py data
+python3 /code/fmri_utils/check_data_org.py
 ```
 
 This compares generated hashes for the data you downloaded with hashes in `/data/data_hashes.txt`.
