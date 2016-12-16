@@ -9,14 +9,12 @@ Functional preprocessing is the collective term applied to the steps taken from 
 ####SPM Realignment parameters 
 *(linear transform, first volume as reference)*
 
-![Figure for SPM realign] 
-(figures/SPM_realign_output.png)
+<img src="figures/SPM_realign_output.png" width = "500" align = "center">
 
 ###First attempt at realignment
 *(optimizing translations and rotations separately, no random jitter added to coordinates)*
 
-![Figure for first attempt at realignment]
-(figures/test_realign_mycode.png)
+<img src="figures/test_realign_mycode.png" width = "500" align = "center">
 
 Most of the optimized realignment parameters here came back at 0. In the end, we think this results from being trapped in local minima of the voxel coordinate grid. The results after this image all then used coordinate mapping instead of affine transforms to do image resampling, with random jitter added to the cooridnate grid. As the next plots demonstrate, this approach avoided the local minima at 0 values and more closely mirrored the outputs from SPM's realignment. 
 
