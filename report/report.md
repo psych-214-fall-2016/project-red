@@ -4,16 +4,53 @@
 Anatomical preprocessing takes the raw T1 weighted image in order to prepare it for future steps in the preprocessing pipeline. The usual steps in anatomical preprocessing include deobliquing the image, reorienting the image to the desired space (in this case MNI/RAS+ space), performing bias reduction, and extracting the brain from the skull. For this project, MNI reorientation was performed first with the help of NIPYPE, followed by a combined bias-reduction/brain extraction with the help of NIPYPE. Finally, the T1 image was deobliqued with the help of the rigid body transformation script in the registration section of the project. All of these steps offered me a useful way to dig deeper into typical preprocessing steps. It highlighted the complexity of neuroimaging as well as the need to fully understand what is under the hood of any functions/programs used in the future.
 
 ## Functional preprocessing
-Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. Options are available for the use of a first/middle reference volume, one/two realignment passes, and the level of smoothing applied to the data. 
+Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. Options are available for the use of a first/middle reference volume, one/two realignment passes, and the level of smoothing applied to the data.
 
 ## Segmentation
-Segmentation takes the output of anatomical preprocessing and computes the probability that each voxel is white matter, gray matter, and csf. It summarizes those probabilities in three probability maps - one for each tissue class. Here, we tried to generate the probability maps using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST. Both methods are currently only implemented to run on brain slices.
+The goal of segmentation is to separate the anatomical volume into CSF, white matter, and gray matter. It takes the preprocessed anatomical volume and generates three tissue probability maps, one for each of the three tissue classes. The maps contain how probable it is for each voxel to belong to a tissue class. Here, we tried to implement segmentation using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST.
+
 
 ### k-means clustering
-Math/code behind k-means, figures
+k-means clustering tries to classify the voxels based on their intensity value. In each iteration of k-means, every voxel is first assigned to the cluster with the closest mean. Each cluster mean is then updated to be the mean voxel intensity value of all the voxels assigned to that cluster.
+
+Below are examples of k-means clustering applied to the middle slice for three subjects. As you can see, k-means finds roughly where CSF, gray matter, and white matter are, but also labels many white matter voxels in the middle of a white matter area as gray matter and vice versa.
+
+**Subject 10159**
+![figure for s10159]
+(figures/kmeans_sub-10159.png)
+
+**Subject 10171**
+![figure for s10171]
+(figures/kmeans_sub-10171.png)
+
+**Subject 10189**
+![figure for s10189]
+(figures/kmeans_sub-10171.png)
 
 ### MRF-EM
-Math/code behind MRF-EM, figures
+In k-means, each voxel was assigned a cluster based on its intensity value. However, where a voxel is located in the brain also says a lot about what kind of tissue it is. MRF-EM improves on k-means (and EM) by adding in spatial information: if two voxels are next to each other, then they probably belong in the same tissue class.
+
+See [this](links/MRF-EM_explain.html) page for more details! (couldn't figure out how to Latex with Markdown)
+
+**Reference:** Zhang, Y. and Brady, M. and Smith, S. Segmentation of brain MR images through a
+hidden Markov random field model and the expectation-maximization algorithm.
+IEEE Trans Med Imag, 20(1):45-57, 2001.
+
+Becaues MRF-EM takes a long time to run, I segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
+
+**Subject 10159**
+![figure for s10159 segmentation]
+(figures/mrf_s10159_segment.png)
+
+![figure for s10159 maps]
+(figures/mrf_s10159_pmaps.png)
+
+**Subject 10189**
+![figure for s10189 segmentation]
+(figures/mrf_s10189_segment.png)
+
+![figure for s10189 maps]
+(figures/mrf_s10189_pmaps.png)
 
 ## Registration
 In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output. We are using linear interpolation whenever resampling is required.
@@ -26,7 +63,7 @@ To demonstrate that our image registration procedure is effective, we change the
 
 We transform the MNI template by translating (59, -3, -20) voxels along and rotating (0.2, -0.2, 0.5) radians around the x-, y-, an z-axes. We will call the original MNI template the "static" image, and the new transformed MNI template the "moving" image.
 
-This set of figures shows cross sections of the static image on the left, the same cross sections of moving image on the right, and the overlap in the middle (green = left, red = right, yellow = overlap). 
+This set of figures shows cross sections of the static image on the left, the same cross sections of moving image on the right, and the overlap in the middle (green = left, red = right, yellow = overlap).
 
 ![resampled_0]
 (figures/mni_icbm152_t1_tal_nlin_asym_09a_brain_changed_resampled_0.png)
@@ -96,9 +133,9 @@ At each step the best parameters are minizing a cost function, in this case the 
 From the overlay illustrations and negative mutual information plot, we are satisfied that our registration is successfully recovering the inital transform (given that some information is necessarily lost in the process of resampling). We feel confident enough in our process to proceed to a scientifically more interesting question:
 
 ### How well does the registration procedure work for aligning individual subject T1s to the MNI template?
-Registering individual subject T1s to the MNI template is a much harder problem because, in addition to being translated and rotated, individual brains have different overall shapes, patterns of sulci and gyri, and may have a different distribution of intensity values. 
+Registering individual subject T1s to the MNI template is a much harder problem because, in addition to being translated and rotated, individual brains have different overall shapes, patterns of sulci and gyri, and may have a different distribution of intensity values.
 
-We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##. 
+We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##.
 
 We'll look at one sample subject (sub-10159) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
 
@@ -142,7 +179,7 @@ Let's look at the saggital plane for the remaining 6 subjects:
 ![sheared_2]
 (figures/sub-10225_T1w_brain_sheared_backup_2.png)
 
-We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was: 
+We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was:
 * locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the sagital plane for each subject
 * on this z-place, get (x,y) coordinates for the right anterior and posterior insula, left and right ventricle peaks, and start of corpos callosum on the midline.
 
@@ -171,5 +208,3 @@ The following plots show the full affine transformed T1 for each subject; saggit
 
 Conclusion?
 ### How do our results compare to a similar registration procedure in the dipy package?
-
-
