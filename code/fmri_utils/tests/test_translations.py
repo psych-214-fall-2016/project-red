@@ -36,8 +36,8 @@ def test_optimize_trans_vol():
     #shift vol1 by parameters, test whether code properly detects and returns
     # these translation parameters
     shifted_vol1 = np.zeros(vol1.shape)
-    shifted_vol1[4:, 7:, 1:] = vol1[:-4, :-7, :-1]
-    translations = np.array([-4., -7., -1.])
+    shifted_vol1[1:, 3:, 2:] = vol1[:-1, :-3, :-2]
+    translations = np.array([-1., -3., -2.])
 
     # test to see whether to optimization of translation function
     #  indeed captures a very similar volume between the shifted and original
