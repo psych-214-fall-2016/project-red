@@ -524,6 +524,10 @@ def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
         label = get_labels(data, thetas, label, L, beta, max_label_iter, njobs)
         thetas = update_thetas(data, thetas, beta, L, label)
 
+    # Sort means by value for probability maps
+    mus = [t[0] for t in thetas]
+    sorted_idx = np.argsort(mus)
+
     # Find probability maps
     maps = {}
     norm = np.zeros(data.shape) # Norm for probabilities
@@ -541,6 +545,8 @@ def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
         maps[slabel] = l_map
     # Normalize maps
     for slabel, m in maps.items():
-        maps[slabel] = m / norm
+        nl_map = m / norm
+        nl_map[np.isnan(nl_map)] = 0 # For very low probabilities
+        maps[slabel] = nl_map
 
     return thetas, label, maps
