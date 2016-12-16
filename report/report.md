@@ -36,7 +36,7 @@ See [this](links/MRF-EM_explain.html) page for more details! (couldn't figure ou
 hidden Markov random field model and the expectation-maximization algorithm.
 IEEE Trans Med Imag, 20(1):45-57, 2001.
 
-Becaues MRF-EM takes a long time to run, I segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
+Because MRF-EM takes a long time to run, I segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
 
 **Subject 10159**
 ![figure for s10159 segmentation]
@@ -51,6 +51,8 @@ Becaues MRF-EM takes a long time to run, I segmented small sections of slices fr
 
 ![figure for s10189 maps]
 (figures/mrf_s10189_pmaps.png)
+
+As shown above, the MRF-EM algorithm makes white and gray matter areas more homogeneous and tries to force neighboring pixels to have the same label. Unfortunately we did not have time to compare these segmentations with the results from FSL FAST. However, since humans are better than algorithms at segmentations, we can at least say that the implementation seems to do a decent job. 
 
 ## Registration
 In our code, we write our own methods to find the best full affine transformation to fit match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3; plus rotations, 6; plus scales, 9; plus shears, 12). The first search is intialized by matching the center of mass between the two images, and each remaining optmiziation is inialized with the preceding output. We are using linear interpolation whenever resampling is required.
