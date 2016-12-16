@@ -4,7 +4,7 @@ demonstration of registration section, to use in report
 Default usage in makefile. This will produce figures used in report by loading
 results of registration run on the original images (SCALE = 1).
 
-$ python registration_report load 1 sub-10159 sub-10171 sub-10189 sub-10193 sub-10206 sub-10217 sub-10225
+$ python registration_report.py load 1 sub-10159 sub-10171 sub-10189 sub-10193 sub-10206 sub-10217 sub-10225
 
 
 You can redo this registration from original skull-stripped MNI and subject T1
@@ -122,9 +122,9 @@ elif instruction == 'rerun':
 ##### produce *.nii* and *png for registration steps #####
 
 # always display with SCALE=1, even if registration used downsampled images
-for i in range(N):
-    print('\nGENERATING TRANSFORMED IMAGES: '+subjects[i])
-    generate_transformed_images(static_filename, subject_T1s[i], 1, subject_output_dirs[i], subject_output_dirs[i])
+# for i in range(N):
+#     print('\nGENERATING TRANSFORMED IMAGES: '+subjects[i])
+#     generate_transformed_images(static_filename, subject_T1s[i], 1, subject_output_dirs[i], subject_output_dirs[i])
 
 subject_sheared_T1s = [pjoin(subject_output_dirs[i], subjects[i]+affine_endings[-1]+'.nii.gz') for i in range(N)]
 
@@ -170,7 +170,7 @@ def save_coords_on_img(subj_line, MNI_line):
     fig, axes = plt.subplots(1,3)
     fig.suptitle(subj_line[0])
 
-    for j in [0,1]:
+    for j in [1,0]:
         img = nib.load(dot_sets[j][8])
 
         inv_affine = npl.inv(img.affine)
@@ -185,8 +185,8 @@ def save_coords_on_img(subj_line, MNI_line):
             axes[2].imshow(data[...,int(mid_coord[-1])].T)
 
         axes[0].scatter([mid_coord[1]],[mid_coord[2]], s = 20, c = colors[j])
-        axes[1].scatter([mid_coord[0]],[mid_coord[1]], s = 10, c = colors[j])
-        axes[2].scatter([mid_coord[0]],[mid_coord[1]], s = 15, c = colors[j])
+        axes[1].scatter([mid_coord[0]],[mid_coord[1]], s = 8, c = colors[j])
+        axes[2].scatter([mid_coord[0]],[mid_coord[1]], s = 12, c = colors[j])
 
 
         for i in range(3,8):
@@ -195,8 +195,8 @@ def save_coords_on_img(subj_line, MNI_line):
             if subj_pt != '':
                 subj_xyz = str_to_array(subj_pt)
                 coord = subj_xyz.dot(mat)+vec
-                axes[1].scatter([coord[0]],[coord[1]], s = 10, c = colors[j])
-                axes[2].scatter([coord[0]],[coord[1]], s = 15, c = colors[j])
+                axes[1].scatter([coord[0]],[coord[1]], s = 8, c = colors[j])
+                axes[2].scatter([coord[0]],[coord[1]], s = 12, c = colors[j])
 
 
 
@@ -209,10 +209,12 @@ def save_coords_on_img(subj_line, MNI_line):
     axes[1].set_ylim([0, data.shape[1]])
 
 
+
+
     axes[2].set_xlim([50, 150])
-    axes[2].set_ylim([100, 180])
+    axes[2].set_ylim([100, 190])
 
-
+    fig.subplots_adjust(wspace=0.5)
 
 
     return fig
@@ -222,11 +224,11 @@ for s in subjects:
 
         f = save_coords_on_img(coord_dict[s], coord_dict['MNI'])
         #report images created with:
-        #f.savefig(pjoin(figs_dir, s+'.png'))
+        f.savefig(pjoin(figs_dir, s+'.png'))
 
         #adjust filename to prevent overwrite of report images:
-        f.savefig(pjoin(figs_dir, instruction+'_'+s+'.png'))
-
+        #f.savefig(pjoin(figs_dir, instruction+'_'+s+'.png'))
+        #plt.show()
     else:
         print('landmarks not identified for this subject; skipping figure generation')
 
