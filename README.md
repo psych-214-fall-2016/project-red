@@ -110,6 +110,7 @@ Picture of how code flows together. [Insert here]
 ### Registration
 * `code_from_dipy.py`: a wrapper around dipy registration functions
 * `code_our_version`: our registration functions which optimize by center of mass, translation, rotations, and shear/scaling.
+* `quality_report.py`: code which uses the above regstration methods on template with known transform to show it works.
 * `registration_report.py`: code which uses the above registration methods on seven specific subjects to show its results.
 
 ## Discussion
