@@ -53,8 +53,8 @@ nib.save(img, resampled_file)
 
 ### do affine registration for template and transformed image
 SCALE = 1
-affine_registration(template_file, resampled_file, 1, figs_dir, 10)
-generate_transformed_images(template_file, resampled_file, 1, figs_dir, figs_dir, 'png')
+#affine_registration(template_file, resampled_file, 1, figs_dir, 10)
+#generate_transformed_images(template_file, resampled_file, 1, figs_dir, figs_dir, 'png')
 
 ### show MI for each step
 labels = ['identical', 'perfect\ninverse', 'trans-\nformed', 'cmass', 'trans-\nlation', 'rigid', 'full\naffine']
