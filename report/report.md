@@ -20,7 +20,14 @@ Most of the optimized realignment parameters here came back at 0. In the end, we
 
 ####Realignment with mapping coordinates 
 *(Cooridnate mapping, random jitter, first volume as reference)*
+
 <img src="figures/r_1pass_no_smooth_sub-10159_task-rest_bold.png" width = "600" align = "center">
+
+####Realignment with mapping coordinates + smoothing 
+*(Cooridnate mapping, random jitter, first volume as reference, 5mm FWHM smoothing)*
+
+<img src="figures/r_one_pass_sub-10159_task-rest_bold.png" width = "600" align = "center">
+
 
 
 ## Segmentation
