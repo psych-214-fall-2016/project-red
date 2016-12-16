@@ -139,64 +139,64 @@ From the overlay illustrations and negative mutual information plot, we are sati
 ### How well does the registration procedure work for aligning individual subject T1s to the MNI template?
 Registering individual subject T1s to the MNI template is a much harder problem because, in addition to being translated and rotated, individual brains have different overall shapes, patterns of sulci and gyri, and may have a different distribution of intensity values.
 
+There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
+
+Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d). (See end of report for more details.)
+
+However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by [Klein et al 2009](https://www.ncbi.nlm.nih.gov/pubmed/19195496), we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
+
 We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##.
 
 We'll look at one sample subject (sub-10159) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
 
 ![cmass_0]
-(figures/sub-10159_T1w_brain_cmass_backup_0.png)
+(figures/sub-10159_T1w_skull_stripped_cmass_0.png)
 
 ![cmass_1]
-(figures/sub-10159_T1w_brain_cmass_backup_1.png)
+(figures/sub-10159_T1w_skull_stripped_cmass_1.png)
 
 ![cmass_2]
-(figures/sub-10159_T1w_brain_cmass_backup_2.png)
+(figures/sub-10159_T1w_skull_stripped_cmass_2.png)
 
 And this is where it ends (full affine transform):
 
 ![sheared_0]
-(figures/sub-10159_T1w_brain_sheared_backup_0.png)
+(figures/sub-10159_T1w_skull_stripped_sheared_0.png)
 
 ![sheared_1]
-(figures/sub-10159_T1w_brain_sheared_backup_1.png)
+(figures/sub-10159_T1w_skull_stripped_sheared_1.png)
 
 ![sheared_2]
-(figures/sub-10159_T1w_brain_sheared_backup_2.png)
+(figures/sub-10159_T1w_skull_stripped_sheared_2.png)
 
 Let's look at the saggital plane for the remaining 6 subjects:
 
 ![sheared_2]
-(figures/sub-10171_T1w_brain_sheared_backup_2.png)
+(figures/sub-10171_T1w_skull_stripped_sheared_2.png)
 
 ![sheared_2]
-(figures/sub-10189_T1w_brain_sheared_backup_2.png)
+(figures/sub-10189_T1w_skull_stripped_sheared_2.png)
 
 ![sheared_2]
-(figures/sub-10193_T1w_brain_sheared_backup_2.png)
+(figures/sub-10193_T1w_skull_stripped_sheared_2.png)
 
 ![sheared_2]
-(figures/sub-10206_T1w_brain_sheared_backup_2.png)
+(figures/sub-10206_T1w_skull_stripped_sheared_2.png)
 
 ![sheared_2]
-(figures/sub-10217_T1w_brain_sheared_backup_2.png)
+(figures/sub-10217_T1w_skull_stripped_sheared_2.png)
 
 ![sheared_2]
-(figures/sub-10225_T1w_brain_sheared_backup_2.png)
+(figures/sub-10225_T1w_skull_stripped_sheared_2.png)
 
 We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was:
-* locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the saggital plane for each subject
+* locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the saggital plane for each subject, similar to [this](http://andysbrainblog.blogspot.com/2012/11/spm-setting-origin-and-normalization.html)
 * on this z-plane, get (x,y) coordinates for the right anterior and posterior insula, left and right ventricle peaks, and start of corpos callosum on the midline.
 
-The following plots show the full affine transformed T1 for each subject; saggital view on the left and axial view on the right; subject coordinates in green and MNI coordinates in red.
+In the images below, you can see green dots for where we found landmarks on the template itself, and red for where the landmarks appeared on individual subject data post-registration. The image on the left is a saggital view, which we used to identify the z-plane. The image in the middle is an axial view of that plane, and the image on the right is a zoomed in version of the middle image.
 
 ![landmarks]
 (figures/sub-10159.png)
-
-![landmarks]
-(figures/sub-10171.png)
-
-![landmarks]
-(figures/sub-10189.png)
 
 ![landmarks]
 (figures/sub-10193.png)
@@ -205,20 +205,20 @@ The following plots show the full affine transformed T1 for each subject; saggit
 (figures/sub-10206.png)
 
 ![landmarks]
+(figures/sub-10225.png)
+
+
+One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the three following subjects (sub-10217, sub-10171, sub-10189)2, we see a clear drift of all of the landmarks, which we believe comes from the skull stripping process clipping off parts of the brain. 
+
+![landmarks]
 (figures/sub-10217.png)
 
 ![landmarks]
-(figures/sub-10225.png)
+(figures/sub-10171.png)
 
-Conclusion?
+![landmarks]
+(figures/sub-10189.png)
+
+Looking at these landmarks gave us something concrete to compare, which we may not have noticed otherwise. It is clear that one of the main drivers of this registration procedure is the outside of the brain, so in the future we will be very careful about the initial skull-stripping steps. In our case, this error is so large that any problems in registration due to actual brain differences are too subtle to pick up. However, we think this landmarks-based approach could still be very informative for these small differences after the skull-stripping issues are addressed.
+
 ### How do our results compare to a similar registration procedure in the dipy package?
-
-There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
-
-Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach here (URL GOES HERE).
-
-However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by PAPER NAME FROM JB HERE, we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
-
-In the images below, you can see green dots for where we found landmarks on the template itself, and red for where the landmarks appeared on individual subject data post-registration.
-
-One of the hypotheses we made after visual inspection is that is it likely that there is a clear link from the skull stripping process to 'drift' in the landmarks from where we expected them to be. In the two following subjects, NUMBER1 and NUMBER2, we see a clear drift of the NAME LANDMARKS, which we believe comes from the skull stripping process clipping off parts of the brain.  
