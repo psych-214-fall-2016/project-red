@@ -141,41 +141,6 @@ Registering individual subject T1s to the MNI template is a much harder problem 
 
 There are two approaches we took to assessing the quality of registration. The problem of what is a good registration is a very deep one which we barely scratch the surface of here.
 
-### How do our results compare to a similar registration procedure in the dipy package?
-
-Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d). (See end of report for more details.)
-
-Using dipy really gives us a gross sanity check that our registrations are in a reasonable ballpark. By eye we end up checking the location of ventricles by eye and getting a general sense of how our registration is doing relative to dipy. In general this gives us a general sense of confidence that we're on the right track.
-
-Comparing our affine transform to dipy, for subject 10189 with ours coming first:
-
-our registration, subject 10189:
-
-![sheared_2]
-(figures/sub-10189_T1w_skull_stripped_sheared_2.png)
-
-dipy, subject 10189:
-
-![dipy_10189]
-(figures/dipy_10189.png)
-
-and then for subject 10206, with our registration again coming first:
-
-our registration, subject 10206:
-
-![sheared_2]
-(figures/sub-10206_T1w_skull_stripped_sheared_2.png)
-
-dipy, subject 10206:
-
-![dipy_10206]
-(figures/dipy_10206.png)
-
-
-### Using anatomical landmarking as a measure of registration quality
-
-However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by [Klein et al 2009](https://www.ncbi.nlm.nih.gov/pubmed/19195496), we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
-
 We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##.
 
 We'll look at one sample subject (sub-10159) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
@@ -231,6 +196,43 @@ sub-10225
 
 ![sheared_2]
 (figures/sub-10225_T1w_skull_stripped_sheared_2.png)
+
+### How do our results compare to a similar registration procedure in the dipy package?
+
+Originally we took an approach of comparing the results of our registration's output to the approach of the dipy package, inspired by their approach [here](http://nipy.org/dipy/examples_built/affine_registration_3d.html#example-affine-registration-3d). (See end of report for more details.)
+
+Using dipy really gives us a gross sanity check that our registrations are in a reasonable ballpark. By eye we end up checking the location of ventricles and getting a general sense of how our registration is doing relative to dipy. In general this gives us a sense of confidence that we're on the right track.
+
+Comparing our affine transform to dipy, for subject 10189 with ours coming first:
+
+our registration, subject 10189:
+
+![sheared_2]
+(figures/sub-10189_T1w_skull_stripped_sheared_2.png)
+
+dipy, subject 10189:
+
+![dipy_10189]
+(figures/dipy_10189.png)
+
+and then for subject 10206, with our registration again coming first:
+
+our registration, subject 10206:
+
+![sheared_2]
+(figures/sub-10206_T1w_skull_stripped_sheared_2.png)
+
+dipy, subject 10206:
+
+![dipy_10206]
+(figures/dipy_10206.png)
+
+
+### Using anatomical landmarking as a measure of registration quality
+
+However, comparing to dipy only delays the question of what a good registration is objectively, beyond a relative comparison to another body of work. Inspired by [Klein et al 2009](https://www.ncbi.nlm.nih.gov/pubmed/19195496), we became interested in identifying specific anatomical landmarks on both the template itself, as well as T1 images sampled into MNI space, to see how these landmarks do or don't line up after registration.
+
+
 
 We can say that the transformed T1 brains look similar to the MNI template, but it's hard to evaluate the success of the registration from this kind of visual inspection. We decided to manually mark a few prominent landmarks on these registered brain and compare their locations to the expected coordinates on the MNI template. Our labeling procedure was:
 * locate the anterior commissure (x=0, y=0, z=0mm in MNI) in the saggital plane for each subject, similar to [this](http://andysbrainblog.blogspot.com/2012/11/spm-setting-origin-and-normalization.html)
