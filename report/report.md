@@ -100,27 +100,27 @@ Registering individual subject T1s to the MNI template is a much harder problem 
 
 We take the T1 images from 7 subjects and register them to the MNI template using the same procedure described above. We then identify specific anatomical landmarks manually on each of the outputs to qualitatively asses how effective our registration methods are. The figures below can be generated with `project-red/code/fmri_utils/registration/registration_report.py`. Since the fitting procedure takes ~1 hr for each subject, we have saved the best affine transforms from each registration step; to rerun this registration uncomment line ##. 
 
-We'll look at one sample subject (sub-10217) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
+We'll look at one sample subject (sub-10159) to illustrate what the registration procedure starts and ends with for a real T1 to MNI match. This is where the registration starts (matching centers of mass):
 
 ![cmass_0]
-(figures/sub-10217_T1w_brain_cmass_backup_0.png)
+(figures/sub-10159_T1w_brain_cmass_backup_0.png)
 
 ![cmass_1]
-(figures/sub-10217_T1w_brain_cmass_backup_1.png)
+(figures/sub-10159_T1w_brain_cmass_backup_1.png)
 
 ![cmass_2]
-(figures/sub-10217_T1w_brain_cmass_backup_2.png)
+(figures/sub-10159_T1w_brain_cmass_backup_2.png)
 
 And this is where it ends (full affine transform):
 
 ![sheared_0]
-(figures/sub-10217_T1w_brain_sheared_backup_0.png)
+(figures/sub-10159_T1w_brain_sheared_backup_0.png)
 
 ![sheared_1]
-(figures/sub-10217_T1w_brain_sheared_backup_1.png)
+(figures/sub-10159_T1w_brain_sheared_backup_1.png)
 
 ![sheared_2]
-(figures/sub-10217_T1w_brain_sheared_backup_2.png)
+(figures/sub-10159_T1w_brain_sheared_backup_2.png)
 
 
 
