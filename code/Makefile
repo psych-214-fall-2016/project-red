@@ -2,6 +2,7 @@ anatomical_prepoc:
 	python fmri_utils/anat_preproc/anatomical_figures.py
 	
 func_preproc:
+	pyhton fmri_utils/func_preproc/volume_realignment.py -f sub-10159_task-rest_bold.nii -n 1 -s 5 -p r_
 
 registration:
 	python fmri_utils/registration/quality_report.py
