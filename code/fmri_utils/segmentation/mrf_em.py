@@ -472,7 +472,7 @@ def init_values(data, k, scale_range, scale_sigma):
     return thetas, labels.astype(int)
 
 def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
-            max_label_iter=100, njobs=1, map_labels=['csf', 'white', 'gray']):
+            max_label_iter=100, njobs=1, map_labels=['csf', 'gray', 'white']):
     """
     Run MRF-EM.
 

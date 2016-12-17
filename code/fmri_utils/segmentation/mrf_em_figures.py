@@ -40,10 +40,10 @@ for i, s in enumerate(subjects):
     slice_s = data[x1:x2, y1:y2, slice_n]
 
     # Segment
-    _, labels, maps = mrf_em(slice_s, 0.05, k=3, max_iter=10,
+    _, labels, maps = mrf_em(slice_s, 0.05, k=2, max_iter=10,
                             scale_range=(100, 400), scale_sigma=50,
                             max_label_iter=10, njobs=2,
-                            map_labels=['csf', 'white', 'gray'])
+                            map_labels=['gray', 'white'])
     # Run kmeans for comparison
     _, klabels, kmaps = kmeans(slice_s.ravel(), k=2, max_iter=10^4,
                              scale_max=400, scale_min=200, map_keys=['gray', 'white'])
