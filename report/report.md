@@ -70,6 +70,7 @@ IEEE Trans Med Imag, 20(1):45-57, 2001.
 Because MRF-EM takes a long time to run, I segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
 
 **Subject 10159**
+
 ![figure for s10159 segmentation]
 (figures/mrf_s10159_segment.png)
 
@@ -78,6 +79,7 @@ Probability maps
 (figures/mrf_s10159_pmaps.png)
 
 **Subject 10189**
+
 ![figure for s10189 segmentation]
 (figures/mrf_s10189_segment.png)
 
