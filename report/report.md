@@ -40,7 +40,7 @@ The goal of segmentation is to separate the anatomical volume into CSF, white ma
 ### k-means clustering
 k-means clustering tries to classify the voxels based on their intensity value. In each iteration of k-means, every voxel is first assigned to the cluster with the closest mean. Each cluster mean is then updated to be the mean voxel intensity value of all the voxels assigned to that cluster.
 
-Below are examples of k-means clustering applied to the middle slice for three subjects. As you can see, k-means finds roughly where CSF, gray matter, and white matter are, but also labels many white matter voxels in the middle of a white matter area as gray matter and vice versa.
+Below are examples of k-means clustering applied to the middle slice for three subjects. The leftmost image is the segmented slice and the three images to the right are the tissue probability maps. As you can see, k-means finds roughly where CSF, gray matter, and white matter are, but also labels many white matter voxels in the middle of a white matter area as gray matter and vice versa.
 
 **Subject 10159**
 ![figure for s10159]
