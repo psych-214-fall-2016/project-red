@@ -26,7 +26,7 @@ for i in range(N):
 
     template = nib.load('../../../data/registration_example_files/mni_icbm152_t1_tal_nlin_asym_09a_brain.nii.gz')
 
-    load_string = '../../../data/registration_example_files/' + subj_IDs[i] + '_T1w_brain.nii.gz'
+    load_string = '../../../data/ds000030/' + subj_IDs[i] + '/anat/' + subj_IDs[i] + '_T1w.nii.gz'
 
     subject_anat = nib.load(load_string)
 
