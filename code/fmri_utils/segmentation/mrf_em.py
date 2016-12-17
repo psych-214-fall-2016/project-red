@@ -472,7 +472,7 @@ def init_values(data, k, scale_range, scale_sigma):
     return thetas, labels.astype(int)
 
 def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
-            max_label_iter=100, njobs=1, map_labels=['csf', 'white', 'gray']):
+            max_label_iter=100, njobs=1, map_labels=['csf', 'gray', 'white']):
     """
     Run MRF-EM.
 
@@ -532,7 +532,7 @@ def mrf_em(data, beta, k=3, max_iter=10^5, scale_range=(0, 100), scale_sigma=20,
     maps = {}
     norm = np.zeros(data.shape) # Norm for probabilities
     for ilabel, slabel in enumerate(map_labels):
-        theta = thetas[ilabel]
+        theta = thetas[sorted_idx[ilabel]]
         g = likelihood(data, theta)
         norm += g
         l_map = np.zeros(data.shape) # Output map for label
