@@ -4,7 +4,7 @@
 Anatomical preprocessing takes the raw T1 weighted image in order to prepare it for future steps in the preprocessing pipeline. The usual steps in anatomical preprocessing include deobliquing the image, reorienting the image to the desired space (in this case MNI/RAS+ space), performing bias reduction, and extracting the brain from the skull. For this project, MNI reorientation was performed first with the help of NIPYPE, followed by a combined bias-reduction/brain extraction with the help of NIPYPE. Finally, the T1 image was deobliqued with the help of the rigid body transformation script in the registration section of the project. All of these steps offered me a useful way to dig deeper into typical preprocessing steps. It highlighted the complexity of neuroimaging as well as the need to fully understand what is under the hood of any functions/programs used in the future.
 
 ## Functional preprocessing
-Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. Options are available for the use of a first/middle reference volume, one/two realignment passes, and the level of smoothing applied to the data.
+Functional preprocessing is the collective term applied to the steps taken from a raw T2 EPI data to prepare it for meaningful analysis with a model (typically, the GLM) and coregistration with an anatomical T1 volume. In SPM terminology, these steps consist of temporal (slice-timing correction) and spatial (realignment / motion correction) preprocessing. Here, we focused on the issues of motion and volumen realignment within a 4D timeseries of volumes. The presented code uses coordinate mapping between volumes to obtain realignment parameters for the 6 rigid body transforms and resample a given volume to the reference, typically the first. This framework output is then compared to SPM's realignment and reslicing functions. Options are available for the use of a first/middle reference volume, one/two realignment passes, and the level of smoothing applied to the data. Testing of these functions and their optimizaiton was done through manipulating a single volume wiht known rotations and translations, and attempting to recover them (tests/test_coord_mapping.py). 
 
 ####SPM Realignment parameters 
 *(linear transform, first volume as reference)*
@@ -30,6 +30,8 @@ From this point on, all images were then realigned excluding voxels with a value
 
 <img src="figures/r_one_pass_sub-10159_task-rest_bold.png" width = "600" align = "center">
 
+Exlcusing resampled voxels with a value of 0 from the moving image reduced the number of sharp drops in the relaignment parameters, and more closely resembled the smoother output of SPM's functionality. 
+
 ####Two-pass realignment with mapping coordinates + smoothing 
 *(Cooridnate mapping, random jitter, first volume as reference, first pass: 8mm FWHM smoothing, second pass: 4mm FWHM smoothing)*
 
@@ -39,6 +41,10 @@ From this point on, all images were then realigned excluding voxels with a value
 *(Cooridnate mapping, random jitter first pass: 8mm FWHM smoothing w/ first volume as reference,, second pass: 4mm FWHM smoothing w/ mean functional of first pass as reference)*
 
 <img src="figures/r_2pass_mean_sub-10159_task-rest_bold.png" width = "600" align = "center">
+
+These two pass relaignment methods were based on ideas from the following paper: Jenkisnon et al., NeuroImage 17, 825–841 (2002) 
+
+Overall, the relaignment functions implemented here were able to capture some of the largest drift and overall patterns of misalignment between volumes - this can be clearly observed in the red trace in the translations plot. However, more subtle patterns of drift, especially in rotations, were not captured very well by these functions. We think this is the case because SPM employs cost funcitons and optimization using first adn second order derivatives (among other techniques) that help to avoid the trapof local minima in optimizing voluem realignment. Overall, smoothing the volumes by 5mm aided in captring overall patterns, while a two-pass approach (even to the mean functional image) did not greatly aid in the realignment process. Of note, the crucial assumption here is that the SPM realignment outputs are in face 'correct.' In reality, we cannot know this is the case. However, it serves as an important comparison of how their approach builds on the more simple methods implemented here. 
 
 
 
