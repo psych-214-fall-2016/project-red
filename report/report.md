@@ -34,12 +34,8 @@ Most of the optimized realignment parameters here came back at 0. In the end, we
 <img src="figures/r_2pass_sub-10159_task-rest_bold.png" width = "600" align = "center">
 
 
-
-
-
 ## Segmentation
 The goal of segmentation is to separate the anatomical volume into CSF, white matter, and gray matter. It takes the preprocessed anatomical volume and generates three tissue probability maps, one for each of the three tissue classes. The maps contain how probable it is for each voxel to belong to a tissue class. Here, we tried to implement segmentation using k-means clustering and the Markov Random Field Expectation-Maximization (MRF-EM) method used in FSL's FAST.
-
 
 ### k-means clustering
 k-means clustering tries to classify the voxels based on their intensity value. In each iteration of k-means, every voxel is first assigned to the cluster with the closest mean. Each cluster mean is then updated to be the mean voxel intensity value of all the voxels assigned to that cluster.
@@ -61,13 +57,13 @@ Below are examples of k-means clustering applied to the middle slice for three s
 ### MRF-EM
 In k-means, each voxel was assigned a cluster based on its intensity value. However, where a voxel is located in the brain also says a lot about what kind of tissue it is. MRF-EM improves on k-means (and EM) by adding in spatial information: if two voxels are next to each other, then they probably belong in the same tissue class.
 
-See [this](https://links/MRF-EM_explain.html) page for more details! (couldn't figure out how to Latex with Markdown)
+See [this](http://htmlpreview.github.com?https://github.com/psych-214-fall-2016/project-red/blob/master/report/links/MRF-EM_explain.html) page for more details! (couldn't figure out how to Latex with Markdown)
 
 **Reference:** Zhang, Y. and Brady, M. and Smith, S. Segmentation of brain MR images through a
 hidden Markov random field model and the expectation-maximization algorithm.
 IEEE Trans Med Imag, 20(1):45-57, 2001.
 
-Because MRF-EM takes a long time to run, I segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
+Because MRF-EM takes a long time to run, we segmented small sections of slices from two subjects as examples. The original section and the results from k-means are also shown for comparison.
 
 **Subject 10159**
 
@@ -87,7 +83,7 @@ Probability maps
 ![figure for s10189 maps]
 (figures/mrf_s10189_pmaps.png)
 
-As shown above, the MRF-EM algorithm makes white and gray matter areas more homogeneous and tries to force neighboring pixels to have the same label. Unfortunately we did not have time to compare these segmentations with the results from FSL FAST. However, since humans are better than algorithms at segmentations, we can at least say that the implementation seems to do a decent job.
+As shown above, the MRF-EM algorithm makes white and gray matter areas more homogeneous and tries to force neighboring pixels to have the same label. Unfortunately we did not have time to compare these segmentations with the results from FSL FAST. However, since humans are better than algorithms at segmentations, we can at least say that the implementation seems to do a decent job on the small sections. We don't know how this code will perform on an entire brain slice or volume with three tissue classes, and this is difficult to test on small sections because it is hard to find a section that has enough pixels that are CSF, gray matter, and white matter for EM to work. 
 
 ## Registration
 In our code, we write our own methods to find the best full affine transformation to match two 3D images, e.g. subject T1 to the MNI template. Four successive searches find the best match (under mutual information) using increasingly more free parameters (translations, 3 parameters; plus rotations, 6 total; plus scales, 9 total; plus shears, 12 total). The first search is initialized by matching the center of mass between the two images, and each remaining optimiziation is initialized with the preceding output. We are using linear interpolation whenever resampling is required.
