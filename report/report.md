@@ -23,6 +23,8 @@ Most of the optimized realignment parameters here came back at 0. In the end, we
 
 <img src="figures/r_1pass_no_smooth_sub-10159_task-rest_bold.png" width = "600" align = "center">
 
+From this point on, all images were then realigned excluding voxels with a value of 0 that were added from the resampling of the moving image 
+
 ####Realignment with mapping coordinates + smoothing 
 *(Cooridnate mapping, random jitter, first volume as reference, 5mm FWHM smoothing)*
 
