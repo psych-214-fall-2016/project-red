@@ -1,5 +1,6 @@
 anatomical_prepoc:
 	python fmri_utils/anat_preproc/anatomical_figures.py
+	
 func_preproc:
 
 registration:
@@ -8,4 +9,4 @@ registration:
 
 segmentation:
 	python fmri_utils/segmentation/kmeans_figures.py
-	python fmri_utils/segmentation/mrf_ef_figures.py
+	python fmri_utils/segmentation/mrf_em_figures.py
