@@ -52,7 +52,7 @@ Below are examples of k-means clustering applied to the middle slice for three s
 
 **Subject 10189**
 ![figure for s10189]
-(figures/kmeans_sub-10171.png)
+(figures/kmeans_sub-10189.png)
 
 ### MRF-EM
 In k-means, each voxel was assigned a cluster based on its intensity value. However, where a voxel is located in the brain also says a lot about what kind of tissue it is. MRF-EM improves on k-means (and EM) by adding in spatial information: if two voxels are next to each other, then they probably belong in the same tissue class.
