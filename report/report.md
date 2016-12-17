@@ -29,9 +29,16 @@ Most of the optimized realignment parameters here came back at 0. In the end, we
 <img src="figures/r_one_pass_sub-10159_task-rest_bold.png" width = "600" align = "center">
 
 ####Two-pass realignment with mapping coordinates + smoothing 
-*(Cooridnate mapping, random jitter, first volume as reference, first pass: 8mm FWHM smoothing, second pass: 4mm FWHM smoothing )*
+*(Cooridnate mapping, random jitter, first volume as reference, first pass: 8mm FWHM smoothing, second pass: 4mm FWHM smoothing)*
 
 <img src="figures/r_2pass_sub-10159_task-rest_bold.png" width = "600" align = "center">
+
+####Two-pass realignment with mapping coordinates + smoothing + realignment to mean 
+*(Cooridnate mapping, random jitter first pass: 8mm FWHM smoothing w/ first volume as reference,, second pass: 4mm FWHM smoothing w/ mean functional of first pass as reference)*
+
+<img src="figures/r_2pass_mean_sub-10159_task-rest_bold.png" width = "600" align = "center">
+
+
 
 
 ## Segmentation
