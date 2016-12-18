@@ -92,7 +92,9 @@ Make figures for each section by running the following:
 
 ## Roadmap
 
-Picture of how code flows together. [Insert here]
+Picture of how code flows together. 
+![schematic]
+(report/figures/schematic.png)
 
 ### Anatomical preprocessing
 * `run_anat_preprocess.py`: master file that calls the rest of the anatomical preproc steps
